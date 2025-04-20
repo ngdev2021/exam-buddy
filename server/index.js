@@ -24,6 +24,7 @@ app.use("/api/evaluate-answer", evaluateAnswerRoute);
 app.use("/api/user-stats", userStatsRoute);
 app.use("/api/auth", authRoute);
 
+app.get("/", (req, res) => res.send("OK"));
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
 const PORT = process.env.PORT || 5000;

@@ -1,6 +1,6 @@
 import express from "express";
 import OpenAI from "openai";
-import topics from "../../shared/questionTopics.js";
+import topics from "../shared/questionTopics.js";
 
 const router = express.Router();
 
