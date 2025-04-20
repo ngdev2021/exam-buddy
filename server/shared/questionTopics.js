@@ -10,3 +10,5 @@ const topics = [
   "Claims Handling",
   "Ethics & Regulations"
 ];
+
+export default topics;
