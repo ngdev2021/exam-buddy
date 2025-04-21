@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import QuestionCard from "../components/QuestionCard";
@@ -38,13 +38,15 @@ export default function PracticePage() {
   const [sessionStarted, setSessionStarted] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [currentQuestion, setCurrentQuestion] = useState(null);
   const [mistakesByTopic, setMistakesByTopic] = useState({});
   const [practiceLength, setPracticeLength] = useState(5);
   const [showSummary, setShowSummary] = useState(false);
-  
+  const [timerEnabled, setTimerEnabled] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   useEffect(() => {
     if (!user || !token) {
@@ -62,38 +64,13 @@ export default function PracticePage() {
       </div>
     );
   }
-  const [timerEnabled, setTimerEnabled] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(0);
-  
 
-  // Prefetch n questions for the cache
-  const prefetchQuestions = useCallback(async (n) => {
-    setLoading(true);
-    setError("");
-    try {
-      const requests = Array.from({ length: n }, () =>
-        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic: selectedTopic })
-      );
-      const responses = await Promise.allSettled(requests);
-      const valid = responses
-        .filter(r => r.status === "fulfilled" && r.value.data && Array.isArray(r.value.data.choices) && r.value.data.choices.length === 4)
-        .map(r => ({ ...r.value.data, topic: selectedTopic }));
-      setQuestionCache(q => [...q, ...valid]);
-    } catch (err) {
-      setError("Failed to prefetch questions. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedTopic]);
-
-  // Start session: prefetch 5 questions
   async function handleStart() {
     setSessionStarted(true);
     setScore({ correct: 0, total: 0 });
     setMistakesByTopic({});
     setQuestions([]);
-    setCurrentQuestion(null);
+    setCurrentIndex(0);
     setShowSummary(false);
     if (timerEnabled) {
       setTimer(practiceLength * 60);
@@ -106,14 +83,13 @@ export default function PracticePage() {
     setError("");
     try {
       const requests = Array.from({ length: practiceLength }, () =>
-        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic: selectedTopic })
+        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic: selectedTopic }).then(r => ({ ...r.data, topic: selectedTopic }))
       );
       const responses = await Promise.allSettled(requests);
       const valid = responses
-        .filter(r => r.status === "fulfilled" && r.value.data && Array.isArray(r.value.data.choices) && r.value.data.choices.length === 4)
-        .map(r => ({ ...r.value.data, topic: selectedTopic }));
+        .filter(r => r.status === "fulfilled" && r.value && Array.isArray(r.value.choices) && r.value.choices.length === 4)
+        .map(r => r.value);
       setQuestions(valid);
-      setCurrentQuestion(valid[0] || null);
     } catch (err) {
       setError("Failed to fetch questions. Please try again.");
     } finally {
@@ -121,7 +97,36 @@ export default function PracticePage() {
     }
   }
 
-  // Timer countdown
+  function handleNextQuestion() {
+    setScore(s => ({ ...s, total: s.total + 1 }));
+    setCurrentIndex(i => {
+      if (i + 1 >= questions.length) {
+        setShowSummary(true);
+        setSessionStarted(false);
+        return i;
+      }
+      return i + 1;
+    });
+  }
+
+  function handleScoreUpdate(isCorrect) {
+    setScore(s => ({ ...s, correct: s.correct + (isCorrect ? 1 : 0) }));
+    if (questions[currentIndex] && questions[currentIndex].topic) {
+      const topic = questions[currentIndex].topic;
+      setMistakesByTopic(prev => ({
+        ...prev,
+        ...(isCorrect ? {} : { [topic]: (prev[topic] || 0) + 1 })
+      }));
+      fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        method: 'POST',
+        body: JSON.stringify({ topic, correct: isCorrect })
+      });
+    }
+  }
+
   useEffect(() => {
     if (!sessionStarted || !timerEnabled || showSummary) return;
     if (timeLeft <= 0 && timerEnabled) {
@@ -135,69 +140,10 @@ export default function PracticePage() {
     return () => clearInterval(interval);
   }, [timeLeft, sessionStarted, timerEnabled, showSummary]);
 
-  // When cache fills, set current question
-  useEffect(() => {
-    if (sessionStarted && !currentQuestion && questionCache.length > 0) {
-      setCurrentQuestion(questionCache[0]);
-      setQuestionsServed(qs => [...qs, questionCache[0]]);
-      setQuestionCache(q => q.slice(1));
-    }
-  }, [sessionStarted, questionCache, currentQuestion]);
-
-  // On answer, pop next from cache and prefetch one more
-  function handleNextQuestion() {
-  setScore(s => ({ ...s, total: s.total + 1 }));
-  setCurrentQuestion((prev, getState) => {
-    const idx = questions.findIndex(q => q === prev);
-    if (idx + 1 >= questions.length) {
-      setShowSummary(true);
-      setSessionStarted(false);
-      return null;
-    }
-    return questions[idx + 1];
-  });
-}
-
-  function handleScoreUpdate(isCorrect) {
-    setScore(s => ({
-      correct: s.correct + (isCorrect ? 1 : 0),
-      total: s.total + 1
-    }));
-    if (currentQuestion && currentQuestion.topic) {
-      setMistakesByTopic(prev => {
-        const newVal = { ...prev };
-        if (!isCorrect) newVal[currentQuestion.topic] = (newVal[currentQuestion.topic] || 0) + 1;
-        return newVal;
-      });
-      // Persist to backend
-      const topic = currentQuestion.topic;
-      fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ topic, correct: isCorrect })
-      });
-    }
-  }
-
-  // On mount, load stats from backend (for future dashboard use)
-  useEffect(() => {
-    const stats = fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(response => response.json())
-      .then(data => setStats(data));
-  }, []);
-
-  // Reset cache if topic changes
   useEffect(() => {
     setSessionStarted(false);
-    setQuestionCache([]);
-    setCurrentQuestion(null);
+    setQuestions([]);
+    setCurrentIndex(0);
     setScore({ correct: 0, total: 0 });
   }, [selectedTopic]);
 
@@ -250,12 +196,12 @@ export default function PracticePage() {
       ) : showSummary ? (
         <div className="max-w-xl mx-auto mt-12 bg-white p-8 rounded-xl shadow text-center">
           <h2 className="text-2xl font-bold mb-4">Practice Complete!</h2>
-          <div className="mb-2 text-lg">You answered <span className="font-bold">{score.correct}</span> out of <span className="font-bold">{score.total}</span> questions correctly.</div>
-          <div className="mb-6 text-xl font-semibold">Score: <span className="text-blue-700">{score.total ? Math.round((score.correct / score.total) * 100) : 0}%</span></div>
+          <div className="mb-2 text-lg">You answered <span className="font-bold">{score.correct}</span> out of <span className="font-bold">{questions.length}</span> questions correctly.</div>
+          <div className="mb-6 text-xl font-semibold">Score: <span className="text-blue-700">{questions.length ? Math.round((score.correct / questions.length) * 100) : 0}%</span></div>
           <div className="mb-6">
             <h3 className="font-bold mb-2">Review Questions</h3>
             <ul className="text-left space-y-4">
-              {questionsServed.map((q, i) => (
+              {questions.map((q, i) => (
                 <li key={i} className="border-b pb-2">
                   <div className="font-semibold">Q{i+1}: {q.question}</div>
                   <div className="ml-2">Correct Answer: <span className="font-bold text-green-700">{q.answer}</span></div>
@@ -273,11 +219,11 @@ export default function PracticePage() {
               Time Left: {Math.floor(timeLeft/60)}:{String(timeLeft%60).padStart(2, '0')}
             </div>
           )}
-          <ScoreTracker correct={score.correct} total={score.total} />
+          <ScoreTracker correct={score.correct} total={questions.length} />
           {error && <div className="text-red-600 mb-4">{error}</div>}
-          {currentQuestion ? (
+          {questions[currentIndex] ? (
             <QuestionCard
-              question={currentQuestion}
+              question={questions[currentIndex]}
               onScore={handleScoreUpdate}
               onNext={handleNextQuestion}
             />

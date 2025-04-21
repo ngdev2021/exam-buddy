@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import QuestionCard from "../components/QuestionCard";
@@ -27,9 +27,9 @@ export default function TestPage() {
   const [started, setStarted] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [currentQuestion, setCurrentQuestion] = useState(null);
   const [mistakesByTopic, setMistakesByTopic] = useState({});
   const [showSummary, setShowSummary] = useState(false);
 
@@ -55,7 +55,7 @@ export default function TestPage() {
     setScore({ correct: 0, total: 0 });
     setMistakesByTopic({});
     setQuestions([]);
-    setCurrentQuestion(null);
+    setCurrentIndex(0);
     setShowSummary(false);
     setLoading(true);
     setError("");
@@ -69,7 +69,6 @@ export default function TestPage() {
         .filter(r => r.status === "fulfilled" && r.value && Array.isArray(r.value.choices) && r.value.choices.length === 4)
         .map(r => r.value);
       setQuestions(valid);
-      setCurrentQuestion(valid[0] || null);
     } catch (err) {
       setError("Failed to fetch questions. Please try again.");
     } finally {
@@ -78,13 +77,13 @@ export default function TestPage() {
   }
 
   function handleNextQuestion() {
-    setScore(s => ({ ...s, total: s.total + 1 }));
-    const currentIndex = questions.findIndex(q => q === currentQuestion);
-    if (currentIndex + 1 >= questions.length) {
-      setShowSummary(true);
-    } else {
-      setCurrentQuestion(questions[currentIndex + 1]);
-    }
+    setCurrentIndex(i => {
+      if (i + 1 >= questions.length) {
+        setShowSummary(true);
+        return i;
+      }
+      return i + 1;
+    });
   }
 
   function handleScoreUpdate(isCorrect) {
@@ -92,13 +91,13 @@ export default function TestPage() {
       correct: s.correct + (isCorrect ? 1 : 0),
       total: s.total + 1
     }));
-    if (currentQuestion && currentQuestion.topic) {
+    if (questions[currentIndex] && questions[currentIndex].topic) {
       setMistakesByTopic(prev => {
         const newVal = { ...prev };
-        if (!isCorrect) newVal[currentQuestion.topic] = (newVal[currentQuestion.topic] || 0) + 1;
+        if (!isCorrect) newVal[questions[currentIndex].topic] = (newVal[questions[currentIndex].topic] || 0) + 1;
         return newVal;
       });
-      const topic = currentQuestion.topic;
+      const topic = questions[currentIndex].topic;
       fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,21 +107,9 @@ export default function TestPage() {
   }
 
   useEffect(() => {
-    if (started && !currentQuestion && questions.length > 0) {
-      setCurrentQuestion(questions[0]);
-    }
-  }, [started, questions, currentQuestion]);
-
-  useEffect(() => {
-    if (questions.length === testLength) {
-      setShowSummary(true);
-    }
-  }, [questions, testLength]);
-
-  useEffect(() => {
     setStarted(false);
     setQuestions([]);
-    setCurrentQuestion(null);
+    setCurrentIndex(0);
     setScore({ correct: 0, total: 0 });
     setMistakesByTopic({});
   }, [selectedTopics, testLength]);
@@ -185,12 +172,12 @@ export default function TestPage() {
           <>
             <ScoreTracker correct={score.correct} total={questions.length} />
             <div className="mb-4 text-gray-700 font-medium">
-              Question {questions.findIndex(q => q === currentQuestion) + 1} of {questions.length}
+              Question {currentIndex + 1} of {questions.length}
             </div>
             {error && <div className="text-red-600 mb-4">{error}</div>}
-            {currentQuestion ? (
+            {questions.length > 0 && !showSummary ? (
               <QuestionCard
-                question={currentQuestion}
+                question={questions[currentIndex]}
                 onScore={handleScoreUpdate}
                 onNext={handleNextQuestion}
               />
