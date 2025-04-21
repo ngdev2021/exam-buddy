@@ -114,10 +114,6 @@ export default function TestPage() {
         },
         body: JSON.stringify({ topic, correct: isCorrect })
       });
-      // Auto-show summary for last question
-      if (currentIndex === questions.length - 1) {
-        setShowSummary(true);
-      }
     }
   }
 
@@ -282,6 +278,7 @@ export default function TestPage() {
             {error && <div className="text-red-600 mb-4">{error}</div>}
             {questions.length > 0 && !showSummary ? (
               <QuestionCard
+                key={currentIndex}
                 question={questions[currentIndex]}
                 onScore={(isCorrect, selectedAnswer) => handleScoreUpdate(isCorrect, selectedAnswer)}
                 onNext={handleNextQuestion}
