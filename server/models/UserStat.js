@@ -45,15 +45,6 @@ UserStat.init({
     afterDestroy: (stat, options) => {
       console.log('UserStat deleted:', stat.id, stat.userId, stat.topic);
     },
-    afterSave: (stat, options) => {
-      console.log('UserStat saved:', stat.id, stat.userId, stat.topic);
-    },
-    afterValidate: (stat, options) => {
-      console.log('UserStat validated:', stat.id, stat.userId, stat.topic);
-    },
-    beforeValidate: (stat, options) => {
-      console.log('UserStat before validate:', stat.userId, stat.topic);
-    },
     afterFind: (result, options) => {
       console.log('UserStat(s) found:', Array.isArray(result) ? result.map(s => s.id) : result?.id);
     },
@@ -65,12 +56,6 @@ UserStat.init({
     },
     afterBulkDestroy: (options) => {
       console.log('Bulk UserStats deleted');
-    },
-    afterBulkSave: (options) => {
-      console.log('Bulk UserStats saved');
-    },
-    afterBulkFind: (results, options) => {
-      console.log('Bulk UserStats found:', results.length);
     }
   }
 });

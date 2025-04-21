@@ -33,15 +33,6 @@ User.init({
     afterDestroy: (user, options) => {
       console.log('User deleted:', user.id, user.email);
     },
-    afterSave: (user, options) => {
-      console.log('User saved:', user.id, user.email);
-    },
-    afterValidate: (user, options) => {
-      console.log('User validated:', user.id, user.email);
-    },
-    beforeValidate: (user, options) => {
-      console.log('User before validate:', user.email);
-    },
     afterFind: (result, options) => {
       console.log('User(s) found:', Array.isArray(result) ? result.map(u => u.id) : result?.id);
     },
@@ -53,12 +44,6 @@ User.init({
     },
     afterBulkDestroy: (options) => {
       console.log('Bulk users deleted');
-    },
-    afterBulkSave: (options) => {
-      console.log('Bulk users saved');
-    },
-    afterBulkFind: (results, options) => {
-      console.log('Bulk users found:', results.length);
     }
   }
 });
