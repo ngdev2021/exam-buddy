@@ -35,7 +35,7 @@ export default function QuestionCard({ question, onScore, onNext }) {
       });
       setFeedback(res.data.feedback);
       setShowNext(true);
-      onScore(res.data.isCorrect, choice);
+      onScore(res.data.isCorrect);
     } catch {
       setFeedback("Could not evaluate answer.");
       setShowNext(true);

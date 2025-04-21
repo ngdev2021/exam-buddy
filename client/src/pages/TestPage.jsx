@@ -86,19 +86,12 @@ export default function TestPage() {
     });
   }
 
-  function handleScoreUpdate(isCorrect, selectedAnswer) {
+  function handleScoreUpdate(isCorrect) {
     setScore(s => ({
       correct: s.correct + (isCorrect ? 1 : 0),
       total: s.total + 1
     }));
-    // Record the user's answer in the current question
-    setQuestions(qs => {
-      const updated = [...qs];
-      if (updated[currentIndex]) {
-        updated[currentIndex] = { ...updated[currentIndex], userAnswer: selectedAnswer };
-      }
-      return updated;
-    });
+
     if (questions[currentIndex] && questions[currentIndex].topic) {
       setMistakesByTopic(prev => {
         const newVal = { ...prev };
@@ -278,9 +271,9 @@ export default function TestPage() {
             {error && <div className="text-red-600 mb-4">{error}</div>}
             {questions.length > 0 && !showSummary ? (
               <QuestionCard
-                key={currentIndex}
+
                 question={questions[currentIndex]}
-                onScore={(isCorrect, selectedAnswer) => handleScoreUpdate(isCorrect, selectedAnswer)}
+                onScore={handleScoreUpdate}
                 onNext={handleNextQuestion}
               />
             ) : (
