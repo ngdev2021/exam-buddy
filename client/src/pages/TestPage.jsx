@@ -26,12 +26,12 @@ export default function TestPage() {
   const [testLength, setTestLength] = useState(25);
   const [started, setStarted] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [questionCache, setQuestionCache] = useState([]);
+  const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [questionIndex, setQuestionIndex] = useState(0);
   const [mistakesByTopic, setMistakesByTopic] = useState({});
+  const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
     if (!user || !token) {
@@ -49,16 +49,18 @@ export default function TestPage() {
       </div>
     );
   }
-  const [showSummary, setShowSummary] = useState(false);
-  const [questionsServed, setQuestionsServed] = useState([]);
 
-  // Prefetch n questions for the cache
-  const prefetchQuestions = useCallback(async (n) => {
+  async function handleStart() {
+    setStarted(true);
+    setScore({ correct: 0, total: 0 });
+    setMistakesByTopic({});
+    setQuestions([]);
+    setCurrentQuestion(null);
+    setShowSummary(false);
     setLoading(true);
     setError("");
     try {
-      // Pick random topics from selectedTopics for each question
-      const requests = Array.from({ length: n }, () => {
+      const requests = Array.from({ length: testLength }, () => {
         const topic = selectedTopics[Math.floor(Math.random() * selectedTopics.length)];
         return axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic }).then(res => ({ ...res.data, topic }));
       });
@@ -66,56 +68,23 @@ export default function TestPage() {
       const valid = responses
         .filter(r => r.status === "fulfilled" && r.value && Array.isArray(r.value.choices) && r.value.choices.length === 4)
         .map(r => r.value);
-      setQuestionCache(q => [...q, ...valid]);
+      setQuestions(valid);
+      setCurrentQuestion(valid[0] || null);
     } catch (err) {
-      setError("Failed to prefetch questions. Please try again.");
+      setError("Failed to fetch questions. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [selectedTopics]);
-
-  // Start test: prefetch initial batch
-  function handleStart() {
-    setStarted(true);
-    setScore({ correct: 0, total: 0 });
-    setMistakesByTopic({});
-    setQuestionCache([]);
-    setCurrentQuestion(null);
-    setQuestionIndex(0);
-    setQuestionsServed([]);
-    setTimeout(() => {
-      prefetchQuestions(CACHE_SIZE);
-    }, 50);
   }
 
-  // When cache fills, set current question
-  useEffect(() => {
-    if (started && !currentQuestion && questionCache.length > 0) {
-      setCurrentQuestion(questionCache[0]);
-      setQuestionsServed(qs => [...qs, questionCache[0]]);
-      setQuestionCache(q => q.slice(1));
-    }
-  }, [started, questionCache, currentQuestion]);
-
-  // On answer, pop next from cache, prefetch one more, increment index
   function handleNextQuestion() {
-    setQuestionIndex(prevIndex => {
-      const nextIndex = prevIndex + 1;
-      if (nextIndex >= testLength) {
-        setCurrentQuestion(null);
-        setShowSummary(true);
-        return prevIndex; // Don't increment further
-      }
-      if (questionCache.length > 0) {
-        setCurrentQuestion(questionCache[0]);
-        setQuestionsServed(qs => [...qs, questionCache[0]]);
-        setQuestionCache(q => q.slice(1));
-        prefetchQuestions(1);
-      } else {
-        setCurrentQuestion(null);
-      }
-      return nextIndex;
-    });
+    setScore(s => ({ ...s, total: s.total + 1 }));
+    const currentIndex = questions.findIndex(q => q === currentQuestion);
+    if (currentIndex + 1 >= questions.length) {
+      setShowSummary(true);
+    } else {
+      setCurrentQuestion(questions[currentIndex + 1]);
+    }
   }
 
   function handleScoreUpdate(isCorrect) {
@@ -123,14 +92,12 @@ export default function TestPage() {
       correct: s.correct + (isCorrect ? 1 : 0),
       total: s.total + 1
     }));
-    // Track mistakes by topic for recommendations
     if (currentQuestion && currentQuestion.topic) {
       setMistakesByTopic(prev => {
         const newVal = { ...prev };
         if (!isCorrect) newVal[currentQuestion.topic] = (newVal[currentQuestion.topic] || 0) + 1;
         return newVal;
       });
-      // Persist to backend
       const topic = currentQuestion.topic;
       fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         method: 'POST',
@@ -140,21 +107,24 @@ export default function TestPage() {
     }
   }
 
-  // On mount, load stats from backend (for future dashboard use)
   useEffect(() => {
-    const stats = {};
-    // Optionally, could preload mistakesByTopic or show stats
-  }, []);
+    if (started && !currentQuestion && questions.length > 0) {
+      setCurrentQuestion(questions[0]);
+    }
+  }, [started, questions, currentQuestion]);
 
-  // Reset everything if topics or test length changes
+  useEffect(() => {
+    if (questions.length === testLength) {
+      setShowSummary(true);
+    }
+  }, [questions, testLength]);
+
   useEffect(() => {
     setStarted(false);
-    setQuestionCache([]);
+    setQuestions([]);
     setCurrentQuestion(null);
     setScore({ correct: 0, total: 0 });
     setMistakesByTopic({});
-    setQuestionIndex(0);
-    setQuestionsServed([]);
   }, [selectedTopics, testLength]);
 
   return (
@@ -206,16 +176,16 @@ export default function TestPage() {
         showSummary ? (
           <div className="max-w-xl mx-auto mt-12 bg-white p-8 rounded-xl shadow text-center">
             <h2 className="text-2xl font-bold mb-4">Test Complete!</h2>
-            <div className="mb-2 text-lg">You answered <span className="font-bold">{score.correct}</span> out of <span className="font-bold">{score.total}</span> questions correctly.</div>
-            <div className="mb-6 text-xl font-semibold">Score: <span className="text-blue-700">{score.total ? Math.round((score.correct / score.total) * 100) : 0}%</span></div>
+            <div className="mb-2 text-lg">You answered <span className="font-bold">{score.correct}</span> out of <span className="font-bold">{questions.length}</span> questions correctly.</div>
+            <div className="mb-6 text-xl font-semibold">Score: <span className="text-blue-700">{questions.length ? Math.round((score.correct / questions.length) * 100) : 0}%</span></div>
             <a href="/dashboard" className="inline-block bg-blue-600 text-white px-6 py-3 rounded font-bold text-lg hover:bg-blue-700 transition">Go to Dashboard</a>
             <button className="mt-6 bg-blue-600 text-white px-6 py-2 rounded font-bold" onClick={() => setStarted(false)}>Take Another Test</button>
           </div>
         ) : (
           <>
-            <ScoreTracker correct={score.correct} total={testLength} />
+            <ScoreTracker correct={score.correct} total={questions.length} />
             <div className="mb-4 text-gray-700 font-medium">
-              Question {questionIndex+1} of {testLength}
+              Question {questions.findIndex(q => q === currentQuestion) + 1} of {questions.length}
             </div>
             {error && <div className="text-red-600 mb-4">{error}</div>}
             {currentQuestion ? (

@@ -37,13 +37,14 @@ export default function PracticePage() {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [sessionStarted, setSessionStarted] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [questionCache, setQuestionCache] = useState([]);
+  const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [mistakesByTopic, setMistakesByTopic] = useState({});
   const [practiceLength, setPracticeLength] = useState(5);
   const [showSummary, setShowSummary] = useState(false);
+  
 
   useEffect(() => {
     if (!user || !token) {
@@ -64,7 +65,7 @@ export default function PracticePage() {
   const [timerEnabled, setTimerEnabled] = useState(false);
   const [timer, setTimer] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [questionsServed, setQuestionsServed] = useState([]);
+  
 
   // Prefetch n questions for the cache
   const prefetchQuestions = useCallback(async (n) => {
@@ -87,24 +88,37 @@ export default function PracticePage() {
   }, [selectedTopic]);
 
   // Start session: prefetch 5 questions
-  function handleStart() {
+  async function handleStart() {
     setSessionStarted(true);
     setScore({ correct: 0, total: 0 });
-    setQuestionCache([]);
-    setCurrentQuestion(null);
     setMistakesByTopic({});
-    setQuestionsServed([]);
+    setQuestions([]);
+    setCurrentQuestion(null);
     setShowSummary(false);
     if (timerEnabled) {
-      setTimer(practiceLength * 60); // 1 min per question default
+      setTimer(practiceLength * 60);
       setTimeLeft(practiceLength * 60);
     } else {
       setTimer(0);
       setTimeLeft(0);
     }
-    setTimeout(() => {
-      prefetchQuestions(CACHE_SIZE);
-    }, 50);
+    setLoading(true);
+    setError("");
+    try {
+      const requests = Array.from({ length: practiceLength }, () =>
+        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic: selectedTopic })
+      );
+      const responses = await Promise.allSettled(requests);
+      const valid = responses
+        .filter(r => r.status === "fulfilled" && r.value.data && Array.isArray(r.value.data.choices) && r.value.data.choices.length === 4)
+        .map(r => ({ ...r.value.data, topic: selectedTopic }));
+      setQuestions(valid);
+      setCurrentQuestion(valid[0] || null);
+    } catch (err) {
+      setError("Failed to fetch questions. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   // Timer countdown
@@ -132,24 +146,17 @@ export default function PracticePage() {
 
   // On answer, pop next from cache and prefetch one more
   function handleNextQuestion() {
-    setScore(prevScore => {
-      const nextTotal = prevScore.total + 1;
-      if (nextTotal >= practiceLength) {
-        setShowSummary(true);
-        setSessionStarted(false);
-        return prevScore;
-      }
-      if (questionCache.length > 0) {
-        setCurrentQuestion(questionCache[0]);
-        setQuestionsServed(qs => [...qs, questionCache[0]]);
-        setQuestionCache(q => q.slice(1));
-        prefetchQuestions(1);
-      } else {
-        setCurrentQuestion(null);
-      }
-      return { ...prevScore, total: nextTotal };
-    });
-  }
+  setScore(s => ({ ...s, total: s.total + 1 }));
+  setCurrentQuestion((prev, getState) => {
+    const idx = questions.findIndex(q => q === prev);
+    if (idx + 1 >= questions.length) {
+      setShowSummary(true);
+      setSessionStarted(false);
+      return null;
+    }
+    return questions[idx + 1];
+  });
+}
 
   function handleScoreUpdate(isCorrect) {
     setScore(s => ({
