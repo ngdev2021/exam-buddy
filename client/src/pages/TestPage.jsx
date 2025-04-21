@@ -99,21 +99,23 @@ export default function TestPage() {
 
   // On answer, pop next from cache, prefetch one more, increment index
   function handleNextQuestion() {
-    setQuestionIndex(i => i + 1);
-    if (questionIndex + 1 >= testLength) {
-      setCurrentQuestion(null);
-      setShowSummary(true);
-      return;
-    }
-    if (questionCache.length > 0) {
-      setCurrentQuestion(questionCache[0]);
-      setQuestionsServed(qs => [...qs, questionCache[0]]);
-      setQuestionCache(q => q.slice(1));
-      prefetchQuestions(1);
-    } else {
-      setCurrentQuestion(null);
-      prefetchQuestions(CACHE_SIZE);
-    }
+    setQuestionIndex(prevIndex => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex >= testLength) {
+        setCurrentQuestion(null);
+        setShowSummary(true);
+        return prevIndex; // Don't increment further
+      }
+      if (questionCache.length > 0) {
+        setCurrentQuestion(questionCache[0]);
+        setQuestionsServed(qs => [...qs, questionCache[0]]);
+        setQuestionCache(q => q.slice(1));
+        prefetchQuestions(1);
+      } else {
+        setCurrentQuestion(null);
+      }
+      return nextIndex;
+    });
   }
 
   function handleScoreUpdate(isCorrect) {

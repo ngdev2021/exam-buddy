@@ -132,20 +132,23 @@ export default function PracticePage() {
 
   // On answer, pop next from cache and prefetch one more
   function handleNextQuestion() {
-    if (score.total + 1 >= practiceLength) {
-      setShowSummary(true);
-      setSessionStarted(false);
-      return;
-    }
-    if (questionCache.length > 0) {
-      setCurrentQuestion(questionCache[0]);
-      setQuestionsServed(qs => [...qs, questionCache[0]]);
-      setQuestionCache(q => q.slice(1));
-      prefetchQuestions(1);
-    } else {
-      setCurrentQuestion(null);
-      prefetchQuestions(CACHE_SIZE);
-    }
+    setScore(prevScore => {
+      const nextTotal = prevScore.total + 1;
+      if (nextTotal >= practiceLength) {
+        setShowSummary(true);
+        setSessionStarted(false);
+        return prevScore;
+      }
+      if (questionCache.length > 0) {
+        setCurrentQuestion(questionCache[0]);
+        setQuestionsServed(qs => [...qs, questionCache[0]]);
+        setQuestionCache(q => q.slice(1));
+        prefetchQuestions(1);
+      } else {
+        setCurrentQuestion(null);
+      }
+      return { ...prevScore, total: nextTotal };
+    });
   }
 
   function handleScoreUpdate(isCorrect) {
