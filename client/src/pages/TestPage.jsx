@@ -16,7 +16,7 @@ const PCTopics = [
   "Ethics & Regulations"
 ];
 
-const TEST_LENGTHS = [10, 25, 50, 75, 100, 125, 150];
+const TEST_LENGTHS = [5, 10, 25, 50, 75, 100, 125, 150];
 const CACHE_SIZE = 5;
 
 export default function TestPage() {
@@ -168,10 +168,100 @@ export default function TestPage() {
         </div>
       ) : (
         showSummary ? (
-          <div className="max-w-xl mx-auto mt-12 bg-white p-8 rounded-xl shadow text-center">
+          <div className="max-w-3xl mx-auto mt-12 bg-white p-8 rounded-xl shadow text-center">
             <h2 className="text-2xl font-bold mb-4">Test Complete!</h2>
             <div className="mb-2 text-lg">You answered <span className="font-bold">{score.correct}</span> out of <span className="font-bold">{questions.length}</span> questions correctly.</div>
             <div className="mb-6 text-xl font-semibold">Score: <span className="text-blue-700">{questions.length ? Math.round((score.correct / questions.length) * 100) : 0}%</span></div>
+            {/* --- Topic Breakdown --- */}
+            <div className="mb-8">
+              <h3 className="font-bold text-lg mb-2 text-blue-800">Performance by Topic</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left border">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="px-3 py-2">Topic</th>
+                      <th className="px-3 py-2">Answered</th>
+                      <th className="px-3 py-2">Correct (%)</th>
+                      <th className="px-3 py-2">Incorrect</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      // Compute topic stats
+                      const topicStats = {};
+                      questions.forEach(q => {
+                        if (!topicStats[q.topic]) topicStats[q.topic] = { total: 0, correct: 0, incorrect: 0 };
+                        topicStats[q.topic].total++;
+                        // Find user's answer
+                        if (q.userAnswer === q.answer) topicStats[q.topic].correct++;
+                        else topicStats[q.topic].incorrect++;
+                      });
+                      return Object.entries(topicStats).map(([topic, s]) => {
+                        const pct = s.total ? Math.round((s.correct / s.total) * 100) : 0;
+                        return (
+                          <tr key={topic} className={pct < 75 ? "bg-yellow-50" : ""}>
+                            <td className="px-3 py-2 font-semibold">{topic}</td>
+                            <td className="px-3 py-2">{s.total}</td>
+                            <td className="px-3 py-2">{pct}%</td>
+                            <td className="px-3 py-2">{s.incorrect}</td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {/* --- Weak Areas & Recommendations --- */}
+            <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-xl shadow">
+              <h3 className="text-lg font-bold mb-2 text-yellow-800 flex items-center gap-2">📚 Recommended Study Areas</h3>
+              {(() => {
+                const topicStats = {};
+                questions.forEach(q => {
+                  if (!topicStats[q.topic]) topicStats[q.topic] = { total: 0, correct: 0 };
+                  topicStats[q.topic].total++;
+                  if (q.userAnswer === q.answer) topicStats[q.topic].correct++;
+                });
+                const weak = Object.entries(topicStats)
+                  .map(([topic, s]) => ({ topic, pct: s.total ? (s.correct / s.total) * 100 : 0 }))
+                  .filter(t => t.pct < 75)
+                  .sort((a, b) => a.pct - b.pct);
+                if (weak.length === 0) return <div className="text-green-700">Great job! No weak areas detected this session.</div>;
+                return (
+                  <ul className="list-disc ml-6 space-y-1">
+                    {weak.map(w => (
+                      <li key={w.topic}>
+                        <span className="font-semibold text-yellow-900">{w.topic}</span>:
+                        <span className="ml-2 text-yellow-700">{Math.round(w.pct)}% correct</span>
+                        <span className="ml-2 text-sm text-yellow-800">Review this topic for mastery!</span>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
+            </div>
+            {/* --- Detailed Review --- */}
+            <div className="mb-8 text-left">
+              <h3 className="font-bold text-lg mb-2 text-blue-800">Review Your Answers</h3>
+              <ul className="space-y-6">
+                {questions.map((q, i) => (
+                  <li key={i} className="border-b pb-4">
+                    <div className="font-semibold">Q{i+1}: {q.question}</div>
+                    <div className="ml-2 mt-1">
+                      <span className="font-bold">Your answer:</span> <span className={q.userAnswer === q.answer ? "text-green-700" : "text-red-700"}>{q.userAnswer || <span className="italic text-gray-400">No answer</span>}</span>
+                      {q.userAnswer !== q.answer && (
+                        <>
+                          <span className="ml-4 font-bold">Correct answer:</span> <span className="text-green-700">{q.answer}</span>
+                        </>
+                      )}
+                    </div>
+                    {q.explanation && (
+                      <div className="ml-2 mt-1 text-sm text-gray-600">Explanation: {q.explanation}</div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
             <a href="/dashboard" className="inline-block bg-blue-600 text-white px-6 py-3 rounded font-bold text-lg hover:bg-blue-700 transition">Go to Dashboard</a>
             <button className="mt-6 bg-blue-600 text-white px-6 py-2 rounded font-bold" onClick={() => setStarted(false)}>Take Another Test</button>
           </div>
