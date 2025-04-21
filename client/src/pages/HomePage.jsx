@@ -18,7 +18,7 @@ export default function HomePage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/user-stats", {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -87,7 +87,7 @@ export default function HomePage() {
       {/* Progress Widget */}
       <div className="w-full max-w-3xl flex flex-col md:flex-row gap-6 mb-8">
         <div className="flex-1 bg-white rounded-xl shadow border border-blue-100 p-6 flex flex-col items-center">
-          <span className="text-2xl font-bold text-blue-700 mb-1">🏆 {loading ? '--' : mastery + '%'}</span>
+          <span className="text-2xl font-bold text-blue-700 mb-1"> {loading ? '--' : mastery + '%'}</span>
           <span className="text-gray-600 mb-1">Mastery Score</span>
           <span className="text-gray-400 text-xs">Keep practicing to boost your score!</span>
         </div>

@@ -28,7 +28,7 @@ export default function QuestionCard({ question, onScore, onNext }) {
     setSelected(choice);
     setShowNext(false);
     try {
-      const res = await axios.post("/api/evaluate-answer", {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/evaluate-answer`, {
         userAnswer: choice,
         correctAnswer: questionData.answer,
         explanation: questionData.explanation

@@ -26,6 +26,8 @@ app.use("/api/auth", authRoute);
 
 app.get("/", (req, res) => res.send("OK"));
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
+app.get("/api/users", (req, res) => res.json({ message: "Users endpoint is working" }));
+app.get("/api/diagnostics", (req, res) => res.json({ message: "Diagnostics endpoint is working" }));
 
 const PORT = process.env.PORT || 5000;
 (async () => {

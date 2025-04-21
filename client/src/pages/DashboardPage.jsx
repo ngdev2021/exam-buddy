@@ -32,7 +32,7 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/user-stats", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         headers: { 
           Authorization: `Bearer ${token}` 
         }
@@ -191,4 +191,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

@@ -72,7 +72,7 @@ export default function PracticePage() {
     setError("");
     try {
       const requests = Array.from({ length: n }, () =>
-        axios.post("/api/generate-question", { topic: selectedTopic })
+        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic: selectedTopic })
       );
       const responses = await Promise.allSettled(requests);
       const valid = responses
@@ -161,7 +161,7 @@ export default function PracticePage() {
       });
       // Persist to backend
       const topic = currentQuestion.topic;
-      fetch('/api/user-stats', {
+      fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ export default function PracticePage() {
 
   // On mount, load stats from backend (for future dashboard use)
   useEffect(() => {
-    const stats = fetch('/api/user-stats', {
+    const stats = fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
       headers: {
         Authorization: `Bearer ${token}`
       }

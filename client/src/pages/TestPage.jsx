@@ -60,7 +60,7 @@ export default function TestPage() {
       // Pick random topics from selectedTopics for each question
       const requests = Array.from({ length: n }, () => {
         const topic = selectedTopics[Math.floor(Math.random() * selectedTopics.length)];
-        return axios.post("/api/generate-question", { topic }).then(res => ({ ...res.data, topic }));
+        return axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic }).then(res => ({ ...res.data, topic }));
       });
       const responses = await Promise.allSettled(requests);
       const valid = responses
@@ -130,7 +130,7 @@ export default function TestPage() {
       });
       // Persist to backend
       const topic = currentQuestion.topic;
-      fetch('/api/user-stats', {
+      fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, correct: isCorrect })
