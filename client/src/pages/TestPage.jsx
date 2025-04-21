@@ -100,9 +100,16 @@ export default function TestPage() {
       const topic = questions[currentIndex].topic;
       fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({ topic, correct: isCorrect })
       });
+      // Auto-show summary for last question
+      if (currentIndex === questions.length - 1) {
+        setShowSummary(true);
+      }
     }
   }
 

@@ -118,10 +118,11 @@ export default function PracticePage() {
         ...(isCorrect ? {} : { [topic]: (prev[topic] || 0) + 1 })
       }));
       fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        method: 'POST',
         body: JSON.stringify({ topic, correct: isCorrect })
       });
     }
