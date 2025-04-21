@@ -35,6 +35,44 @@ UserStat.init({
   sequelize,
   modelName: 'UserStat',
   timestamps: true,
+  hooks: {
+    afterCreate: (stat, options) => {
+      console.log('UserStat created:', stat.id, stat.userId, stat.topic);
+    },
+    afterUpdate: (stat, options) => {
+      console.log('UserStat updated:', stat.id, stat.userId, stat.topic);
+    },
+    afterDestroy: (stat, options) => {
+      console.log('UserStat deleted:', stat.id, stat.userId, stat.topic);
+    },
+    afterSave: (stat, options) => {
+      console.log('UserStat saved:', stat.id, stat.userId, stat.topic);
+    },
+    afterValidate: (stat, options) => {
+      console.log('UserStat validated:', stat.id, stat.userId, stat.topic);
+    },
+    beforeValidate: (stat, options) => {
+      console.log('UserStat before validate:', stat.userId, stat.topic);
+    },
+    afterFind: (result, options) => {
+      console.log('UserStat(s) found:', Array.isArray(result) ? result.map(s => s.id) : result?.id);
+    },
+    afterBulkCreate: (stats, options) => {
+      console.log('Bulk UserStats created:', stats.length);
+    },
+    afterBulkUpdate: (options) => {
+      console.log('Bulk UserStats updated');
+    },
+    afterBulkDestroy: (options) => {
+      console.log('Bulk UserStats deleted');
+    },
+    afterBulkSave: (options) => {
+      console.log('Bulk UserStats saved');
+    },
+    afterBulkFind: (results, options) => {
+      console.log('Bulk UserStats found:', results.length);
+    }
+  }
 });
 
 User.hasMany(UserStat, { foreignKey: 'userId' });

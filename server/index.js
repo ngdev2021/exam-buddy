@@ -19,15 +19,36 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  if (req.method !== 'GET') {
+    console.log('Request body:', req.body);
+  }
+  next();
+});
+
 app.use("/api/generate-question", generateQuestionRoute);
 app.use("/api/evaluate-answer", evaluateAnswerRoute);
 app.use("/api/user-stats", userStatsRoute);
 app.use("/api/auth", authRoute);
 
-app.get("/", (req, res) => res.send("OK"));
-app.get("/api/health", (req, res) => res.json({ status: "ok" }));
-app.get("/api/users", (req, res) => res.json({ message: "Users endpoint is working" }));
-app.get("/api/diagnostics", (req, res) => res.json({ message: "Diagnostics endpoint is working" }));
+app.get("/", (req, res) => {
+  console.log("GET /");
+  res.send("OK");
+});
+app.get("/api/health", (req, res) => {
+  console.log("GET /api/health");
+  res.json({ status: "ok" });
+});
+app.get("/api/users", (req, res) => {
+  console.log("GET /api/users");
+  res.json({ message: "Users endpoint is working" });
+});
+app.get("/api/diagnostics", (req, res) => {
+  console.log("GET /api/diagnostics");
+  res.json({ message: "Diagnostics endpoint is working" });
+});
 
 const PORT = process.env.PORT || 5000;
 (async () => {
@@ -43,3 +64,9 @@ const PORT = process.env.PORT || 5000;
     process.exit(1);
   }
 })();
+
+// Express error handler for unhandled errors
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal Server Error', details: err.message });
+});
