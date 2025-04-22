@@ -20,6 +20,8 @@ function getBadge(pct) {
   return <span className="ml-2 px-2 py-1 rounded bg-red-200 text-red-800 text-xs font-bold">Needs Work</span>;
 }
 
+import MobileNavBar from "../components/MobileNavBar";
+
 export default function DashboardPage() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
@@ -115,34 +117,37 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
-      <div className="flex items-center mb-4">
-        <h2 className="text-2xl font-semibold">Dashboard</h2>
-        <button className="ml-auto bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold" onClick={fetchStats}>Refresh</button>
+    <div className="pb-20 px-2 sm:px-0 max-w-2xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-center mb-4 gap-2 sm:gap-0">
+        <h2 className="text-2xl font-bold text-blue-800 tracking-tight">Dashboard</h2>
+        <button className="sm:ml-auto w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow hover:bg-blue-600 transition" onClick={fetchStats}>Refresh</button>
       </div>
       {lastUpdated && (
-        <div className="text-xs text-gray-500 mb-2">Last updated: {lastUpdated.toLocaleTimeString()}</div>
+        <div className="text-xs text-gray-500 mb-2 text-center sm:text-left">Last updated: {lastUpdated.toLocaleTimeString()}</div>
       )}
-      <div className="mb-4 flex flex-wrap gap-4 items-center">
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-xl shadow">
+      {/* Stats Widget */}
+      <div className="mb-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center">
+        <div className="flex-1 w-full bg-gradient-to-br from-blue-100 via-white to-blue-50 border-l-4 border-blue-400 p-6 rounded-2xl shadow-xl mb-2 sm:mb-0">
           {typeof allAnswered !== 'number' || isNaN(allAnswered) || allAnswered === 0 ? (
-            <div className="text-gray-500">No progress yet. Start practicing or testing to see your stats here!</div>
+            <div className="text-gray-500 text-center">No progress yet. Start practicing or testing to see your stats here!</div>
           ) : (
             <>
-              <div className="font-bold text-blue-800 text-lg">Total Questions Answered: <span className="text-blue-900">{allAnswered}</span></div>
-              <div className="text-green-700">Correct: {allCorrect} ({allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}%)</div>
+              <div className="font-bold text-blue-800 text-xl mb-1">Total Questions Answered: <span className="text-blue-900">{allAnswered}</span></div>
+              <div className="text-green-700 text-lg">Correct: {allCorrect} ({allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}%)</div>
             </>
           )}
         </div>
-        <button className="ml-auto bg-red-600 text-white px-4 py-2 rounded font-bold" onClick={handleReset}>Reset Progress</button>
+        <button className="w-full sm:w-auto bg-red-600 text-white px-4 py-2 rounded-full font-bold shadow hover:bg-red-700 transition" onClick={handleReset}>Reset Progress</button>
       </div>
+      {/* Progress Table */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Progress by Topic</h3>
+        <h3 className="text-lg font-semibold mb-2 text-blue-700">Progress by Topic</h3>
         {typeof allAnswered !== 'number' || isNaN(allAnswered) || allAnswered === 0 ? (
           <div className="text-gray-500">No data yet. Practice or take a test to see your topic breakdown.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left border">
+          <div className="overflow-x-auto rounded-xl shadow border border-gray-200 bg-white">
+            <table className="min-w-full text-left">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="px-3 py-2">Topic</th>
@@ -171,7 +176,8 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-xl shadow">
+      {/* Weakest Areas Card */}
+      <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 border-l-4 border-yellow-400 p-6 rounded-2xl shadow-xl">
         <h3 className="text-lg font-bold mb-1 text-yellow-800">📈 Your Weakest Areas</h3>
         {allAnswered === 0 ? (
           <div className="text-gray-500">No data yet. Weak areas will be shown here after you answer some questions.</div>
@@ -188,6 +194,9 @@ export default function DashboardPage() {
           </ul>
         )}
       </div>
+
+      {/* Mobile NavBar */}
+      <MobileNavBar />
     </div>
   );
 }
