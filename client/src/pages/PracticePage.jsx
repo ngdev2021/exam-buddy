@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import QuestionCard from "../components/QuestionCard";
 import ScoreTracker from "../components/ScoreTracker";
 import axios from "axios";
+import mathTopics from "../shared/mathTopics";
 
 const topics = [
   "Risk Management",
@@ -13,7 +14,8 @@ const topics = [
   "Policy Provisions",
   "Underwriting",
   "Claims Handling",
-  "Ethics & Regulations"
+  "Ethics & Regulations",
+  "Math Calculations"
 ];
 
 const CACHE_SIZE = 5;
@@ -26,7 +28,8 @@ const topicToChapter = {
   "Policy Provisions": "Chapter 4 – Policy Provisions",
   "Underwriting": "Chapter 6 – Underwriting & Applications",
   "Claims Handling": "Chapter 7 – Claims Handling",
-  "Ethics & Regulations": "Chapter 8 – Ethics & Regulations"
+  "Ethics & Regulations": "Chapter 8 – Ethics & Regulations",
+  "Math Calculations": "Math Calculations"
 };
 
 const PRACTICE_LENGTHS = [5, 10, 25];

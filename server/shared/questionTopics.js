@@ -1,4 +1,6 @@
 // List of Texas P&C topics for question generation
+
+// Added math-related category for Texas P&C insurance math
 const topics = [
   // Example topics. Replace or expand as needed.
   "Risk Management",
@@ -8,7 +10,8 @@ const topics = [
   "Policy Provisions",
   "Underwriting",
   "Claims Handling",
-  "Ethics & Regulations"
+  "Ethics & Regulations",
+  "Math Calculations"  // new category added
 ];
 
 export default topics;

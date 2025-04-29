@@ -21,6 +21,7 @@ function getBadge(pct) {
 }
 
 import MobileNavBar from "../components/MobileNavBar";
+import CustomQuestionGenerator from "../components/CustomQuestionGenerator";
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
@@ -194,7 +195,10 @@ export default function DashboardPage() {
           </ul>
         )}
       </div>
-
+      {/* Custom Question Generator */}
+      <div className="mb-6">
+        <CustomQuestionGenerator />
+      </div>
       {/* Mobile NavBar */}
       <MobileNavBar />
     </div>
