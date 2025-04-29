@@ -8,6 +8,7 @@ import TestPage from "./pages/TestPage";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import CalculatorPage from "./pages/CalculatorPage";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="calculator" element={<CalculatorPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

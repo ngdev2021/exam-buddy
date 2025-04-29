@@ -7,3 +7,4 @@ node_modules/
 dist/
 # OS/IDE files
 .DS_Store
+.vercel
