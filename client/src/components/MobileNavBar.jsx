@@ -1,11 +1,10 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { HomeIcon, ClipboardListIcon, PencilAltIcon, UserCircleIcon } from "@heroicons/react/outline";
-
+import { HomeIcon, ClipboardIcon, PencilIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 const navItems = [
   { path: "/", label: "Home", icon: <HomeIcon className="w-6 h-6" /> },
-  { path: "/practice", label: "Practice", icon: <PencilAltIcon className="w-6 h-6" /> },
-  { path: "/test", label: "Test", icon: <ClipboardListIcon className="w-6 h-6" /> },
+  { path: "/practice", label: "Practice", icon: <PencilIcon className="w-6 h-6" /> },
+  { path: "/test", label: "Test", icon: <ClipboardIcon className="w-6 h-6" /> },
   { path: "/dashboard", label: "Dashboard", icon: <UserCircleIcon className="w-6 h-6" /> }
 ];
 

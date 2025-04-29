@@ -2,6 +2,11 @@ import React, { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * @typedef {{ total: number, correct: number, incorrect: number }} TopicStats
+ */
+/** @typedef {{ [key: string]: TopicStats }} StatsMap */
+
 const topics = [
   "Risk Management",
   "Property Insurance",
@@ -13,6 +18,9 @@ const topics = [
   "Ethics & Regulations"
 ];
 
+/**
+ * @param {number} pct
+ */
 function getBadge(pct) {
   if (pct >= 90) return <span className="ml-2 px-2 py-1 rounded bg-green-200 text-green-800 text-xs font-bold">Expert</span>;
   if (pct >= 75) return <span className="ml-2 px-2 py-1 rounded bg-yellow-200 text-yellow-800 text-xs font-bold">Proficient</span>;
@@ -26,14 +34,14 @@ import CustomQuestionGenerator from "../components/CustomQuestionGenerator";
 export default function DashboardPage() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
-  const [lastUpdated, setLastUpdated] = React.useState(null);
+  const [stats, setStats] = React.useState(/** @type {StatsMap} */ ({}));
+  const [loading, setLoading] = React.useState(/** @type {boolean} */ (true));
+  const [error, setError] = React.useState(/** @type {string} */ (""));
+  const [lastUpdated, setLastUpdated] = React.useState(/** @type {Date|null} */ (null));
 
   const fetchStats = async () => {
     setLoading(true);
-    setError(null);
+    setError("");
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         headers: { 
@@ -47,7 +55,7 @@ export default function DashboardPage() {
       console.log('Dashboard stats:', data);
     } catch (err) {
       setError("Could not load stats from server.");
-      setStats(null);
+      setStats({});
     }
     setLoading(false);
   };
