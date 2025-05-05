@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useSubject } from "../contexts/SubjectContext";
 
 const navItems = [
   { path: "/", label: "Home" },
@@ -12,6 +13,7 @@ export default function NavigationMenu() {
   // Only show on md+ screens
 
   const location = useLocation();
+  const { subjects, selectedSubject, setSelectedSubject } = useSubject();
   return (
     <nav className="w-full bg-white shadow sticky top-0 z-50 mb-6 md:flex hidden">
       <div className="max-w-4xl mx-auto px-4 flex items-center h-14">
@@ -28,6 +30,22 @@ export default function NavigationMenu() {
             </li>
           ))}
         </ul>
+        <div>
+          <select
+            className="border p-2 rounded"
+            value={selectedSubject.name}
+            onChange={e => {
+              const subj = subjects.find(s => s.name === e.target.value);
+              setSelectedSubject(subj);
+            }}
+          >
+            {subjects.map(s => (
+              <option key={s.name} value={s.name}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </nav>
   );

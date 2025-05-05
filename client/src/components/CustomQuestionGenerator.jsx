@@ -1,16 +1,11 @@
 // @ts-nocheck
 import React, { useState } from "react";
 import axios from "axios";
-import { insurance } from "../subjects/insurance";
-import { awsCertifications } from "../subjects/awsCertifications";
-import { taxProfessional } from "../subjects/taxProfessional";
-
-// Define available subjects
-const subjects = [insurance, awsCertifications, taxProfessional];
+import { useSubject } from "../contexts/SubjectContext";
 
 export default function CustomQuestionGenerator() {
-  // State for selected subject and compute topics
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0]);
+  // Use global subject from context
+  const { subjects, selectedSubject, setSelectedSubject } = useSubject();
   const topics = selectedSubject.groups.flatMap(g => g.topics);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [count, setCount] = useState(1);
@@ -48,23 +43,6 @@ export default function CustomQuestionGenerator() {
   return (
     <div className="max-w-xl mx-auto p-6 bg-white rounded shadow">
       <h2 className="text-2xl font-bold mb-4">Custom Question Generator</h2>
-      {/* Subject selector */}
-      <div className="mb-4">
-        <label className="block mb-1">Select Subject:</label>
-        <select
-          className="w-full border p-2 rounded"
-          value={selectedSubject.name}
-          onChange={e => {
-            const subj = subjects.find(s => s.name === e.target.value);
-            setSelectedSubject(subj);
-            setSelectedTopic("");
-          }}
-        >
-          {subjects.map(s => (
-            <option key={s.name} value={s.name}>{s.name}</option>
-          ))}
-        </select>
-      </div>
       <div className="mb-4">
         <label className="block mb-1">Select Topic:</label>
         <select
