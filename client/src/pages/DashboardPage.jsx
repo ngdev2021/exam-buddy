@@ -24,7 +24,7 @@ import MobileNavBar from "../components/MobileNavBar";
 import CustomQuestionGenerator from "../components/CustomQuestionGenerator";
 
 export default function DashboardPage() {
-  const { user, token } = useAuth();
+  const { user, token, isTokenExpired, handleAuthError } = useAuth();
   const { selectedSubject } = useSubject();
   // Get topics from the selected subject
   const topics = selectedSubject.groups.flatMap(g => g.topics);
@@ -38,17 +38,33 @@ export default function DashboardPage() {
     setLoading(true);
     setError("");
     try {
+      // Check if token is expired before making the request
+      if (!token || isTokenExpired()) {
+        console.log("Token expired or missing, redirecting to login");
+        navigate("/login", { state: { message: "Please log in to view your dashboard." } });
+        return;
+      }
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
         headers: { 
           Authorization: `Bearer ${token}` 
         }
       });
+      
+      // Handle auth errors
+      if (res.status === 401 || res.status === 403) {
+        handleAuthError(res.status);
+        return;
+      }
+      
       if (!res.ok) throw new Error("Failed to fetch stats");
+      
       const data = await res.json();
       setStats(data && typeof data === 'object' ? data : {});
       setLastUpdated(new Date());
       console.log('Dashboard stats:', data);
     } catch (err) {
+      console.error("Stats fetch error:", err);
       setError("Could not load stats from server.");
       setStats({});
     }
