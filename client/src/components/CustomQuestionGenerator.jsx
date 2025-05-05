@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import axios from "axios";
 import { insurance } from "../subjects/insurance";
 import { awsCertifications } from "../subjects/awsCertifications";
+import { taxProfessional } from "../subjects/taxProfessional";
 
 // Define available subjects
-const subjects = [insurance, awsCertifications];
+const subjects = [insurance, awsCertifications, taxProfessional];
 
 export default function CustomQuestionGenerator() {
   // State for selected subject and compute topics
