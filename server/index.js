@@ -11,6 +11,7 @@ import userStatsRoute from "./routes/userStats.js";
 import authRoute from "./routes/auth.js";
 import userPreferenceRoute from "./routes/userPreference.js";
 import diagnosticsRoute from "./routes/diagnostics.js";
+import migrationsRoute from "./routes/migrations.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api/user-stats", userStatsRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/user-preference", userPreferenceRoute);
 app.use("/api/diagnostics", diagnosticsRoute);
+app.use("/api/migrations", migrationsRoute);
 
 app.get("/", (req, res) => {
   console.log("GET /");
