@@ -19,6 +19,11 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
+  currentSubject: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'Insurance Exam'
+  }
 }, {
   sequelize,
   modelName: 'User',

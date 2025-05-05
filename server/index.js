@@ -9,6 +9,7 @@ import generateQuestionRoute from "./routes/generateQuestion.js";
 import evaluateAnswerRoute from "./routes/evaluateAnswer.js";
 import userStatsRoute from "./routes/userStats.js";
 import authRoute from "./routes/auth.js";
+import userPreferenceRoute from "./routes/userPreference.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use("/api/generate-question", generateQuestionRoute);
 app.use("/api/evaluate-answer", evaluateAnswerRoute);
 app.use("/api/user-stats", userStatsRoute);
 app.use("/api/auth", authRoute);
+app.use("/api/user-preference", userPreferenceRoute);
 
 app.get("/", (req, res) => {
   console.log("GET /");
