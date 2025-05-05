@@ -25,8 +25,10 @@ export default function CustomQuestionGenerator() {
     setQuestions([]);
     try {
       const requests = Array.from({ length: count }, () =>
-        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic: selectedTopic })
-          .then(res => res.data)
+        axios.post(
+          `${import.meta.env.VITE_API_URL}/api/generate-question`,
+          { topic: selectedTopic, subject: selectedSubject.name }
+        ).then(res => res.data)
       );
       const results = await Promise.allSettled(requests);
       const valid = results
