@@ -1,28 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useSubject } from "../contexts/SubjectContext";
 import { useNavigate } from "react-router-dom";
 import QuestionCard from "../components/QuestionCard";
 import ScoreTracker from "../components/ScoreTracker";
 import axios from "axios";
 
-const PCTopics = [
-  "Risk Management",
-  "Property Insurance",
-  "Casualty Insurance",
-  "Texas Insurance Law",
-  "Policy Provisions",
-  "Underwriting",
-  "Claims Handling",
-  "Ethics & Regulations"
-];
+// Topics now come from SubjectContext
 
 const TEST_LENGTHS = [5, 10, 25, 50, 75, 100, 125, 150];
 const CACHE_SIZE = 5;
 
 export default function TestPage() {
   const { user, token } = useAuth();
+  const { selectedSubject } = useSubject();
   const navigate = useNavigate();
-  const [selectedTopics, setSelectedTopics] = useState(PCTopics);
+  // Get topics from the selected subject
+  const subjectTopics = selectedSubject.groups.flatMap(g => g.topics);
+  const [selectedTopics, setSelectedTopics] = useState(subjectTopics);
   const [testLength, setTestLength] = useState(25);
   const [started, setStarted] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
@@ -62,7 +57,10 @@ export default function TestPage() {
     try {
       const requests = Array.from({ length: testLength }, () => {
         const topic = selectedTopics[Math.floor(Math.random() * selectedTopics.length)];
-        return axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic }).then(res => ({ ...res.data, topic }));
+        return axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { 
+          topic,
+          subject: selectedSubject.name 
+        }).then(res => ({ ...res.data, topic }));
       });
       const responses = await Promise.allSettled(requests);
       const valid = responses
@@ -117,6 +115,11 @@ export default function TestPage() {
     setScore({ correct: 0, total: 0 });
     setMistakesByTopic({});
   }, [selectedTopics, testLength]);
+  
+  // Update selectedTopics when subject changes
+  useEffect(() => {
+    setSelectedTopics(subjectTopics);
+  }, [selectedSubject]);
 
   return (
     <div>
@@ -140,7 +143,7 @@ export default function TestPage() {
           <div className="mb-4">
             <label className="block mb-2">Select categories:</label>
             <div className="flex gap-2 flex-wrap">
-              {PCTopics.map(topic => (
+              {subjectTopics.map(topic => (
                 <label key={topic} className="flex items-center gap-1">
                   <input
                     type="checkbox"

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useSubject } from "../contexts/SubjectContext";
 
 export default function HomePage() {
   const { user, token } = useAuth();
+  const { selectedSubject } = useSubject();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export default function HomePage() {
       {/* App-style Greeting */}
       <div className="w-full max-w-3xl mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold text-blue-800 mb-1">Welcome to ExamBuddy</h1>
-        <p className="text-gray-600 mb-6">Your all-in-one Texas P&C exam prep workspace</p>
+        <p className="text-gray-600 mb-6">Your all-in-one {selectedSubject.name} prep workspace</p>
       </div>
       {/* Quick Navigation Grid */}
       <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">

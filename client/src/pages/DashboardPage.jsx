@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useSubject } from "../contexts/SubjectContext";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -7,16 +8,7 @@ import { useNavigate } from "react-router-dom";
  */
 /** @typedef {{ [key: string]: TopicStats }} StatsMap */
 
-const topics = [
-  "Risk Management",
-  "Property Insurance",
-  "Casualty Insurance",
-  "Texas Insurance Law",
-  "Policy Provisions",
-  "Underwriting",
-  "Claims Handling",
-  "Ethics & Regulations"
-];
+// Topics now come from SubjectContext
 
 /**
  * @param {number} pct
@@ -33,6 +25,9 @@ import CustomQuestionGenerator from "../components/CustomQuestionGenerator";
 
 export default function DashboardPage() {
   const { user, token } = useAuth();
+  const { selectedSubject } = useSubject();
+  // Get topics from the selected subject
+  const topics = selectedSubject.groups.flatMap(g => g.topics);
   const navigate = useNavigate();
   const [stats, setStats] = React.useState(/** @type {StatsMap} */ ({}));
   const [loading, setLoading] = React.useState(/** @type {boolean} */ (true));

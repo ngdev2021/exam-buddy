@@ -1,22 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useSubject } from "../contexts/SubjectContext";
 import { useNavigate } from "react-router-dom";
 import QuestionCard from "../components/QuestionCard";
 import ScoreTracker from "../components/ScoreTracker";
 import axios from "axios";
 import mathTopics from "../shared/mathTopics";
 
-const topics = [
-  "Risk Management",
-  "Property Insurance",
-  "Casualty Insurance",
-  "Texas Insurance Law",
-  "Policy Provisions",
-  "Underwriting",
-  "Claims Handling",
-  "Ethics & Regulations",
-  "Math Calculations"
-];
+// Topics now come from SubjectContext
 
 const CACHE_SIZE = 5;
 
@@ -36,6 +27,9 @@ const PRACTICE_LENGTHS = [5, 10, 25];
 
 export default function PracticePage() {
   const { user, token } = useAuth();
+  const { selectedSubject } = useSubject();
+  // Get topics from the selected subject
+  const topics = selectedSubject.groups.flatMap(g => g.topics);
   const navigate = useNavigate();
   const [selectedTopic, setSelectedTopic] = useState("");
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -86,7 +80,10 @@ export default function PracticePage() {
     setError("");
     try {
       const requests = Array.from({ length: practiceLength }, () =>
-        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { topic: selectedTopic }).then(r => ({ ...r.data, topic: selectedTopic }))
+        axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { 
+          topic: selectedTopic,
+          subject: selectedSubject.name 
+        }).then(r => ({ ...r.data, topic: selectedTopic }))
       );
       const responses = await Promise.allSettled(requests);
       const valid = responses
