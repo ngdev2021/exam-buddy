@@ -24,19 +24,17 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed");
-      login(data.token, data.user);
+      // Use the login function from AuthContext
+      await login(email, password);
+      // If login is successful, navigate to home
+      // (AuthContext will handle setting the token and user)
       navigate("/");
     } catch (err) {
+      console.error("Login error in component:", err);
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
