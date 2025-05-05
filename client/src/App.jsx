@@ -8,6 +8,7 @@ import TestPage from "./pages/TestPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { SubjectProvider } from "./contexts/SubjectContext";
 import { Outlet } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -63,7 +64,9 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <SubjectProvider>
+        <AppRoutes />
+      </SubjectProvider>
     </AuthProvider>
   );
 }

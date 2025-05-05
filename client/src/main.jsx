@@ -14,20 +14,18 @@ import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <SubjectProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<App />}>
-            <Route index element={<HomePage />} />
-            <Route path="practice" element={<PracticePage />} />
-            <Route path="test" element={<TestPage />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
-            <Route path="calculator" element={<CalculatorPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </SubjectProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="*" element={<App />}>
+          <Route index element={<HomePage />} />
+          <Route path="practice" element={<PracticePage />} />
+          <Route path="test" element={<TestPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
+          <Route path="calculator" element={<CalculatorPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
