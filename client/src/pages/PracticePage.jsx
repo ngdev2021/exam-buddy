@@ -54,9 +54,9 @@ export default function PracticePage() {
   if (!user) {
     return (
       <div className="min-h-[90vh] flex flex-col items-center justify-center">
-        <div className="bg-white p-8 rounded shadow text-center">
-          <h2 className="text-xl font-bold mb-2">Practice Mode</h2>
-          <p className="mb-4">Please <a href="/login" className="text-blue-600 underline">log in</a> or <a href="/register" className="text-green-600 underline">register</a> to practice.</p>
+        <div className="bg-white dark:bg-gray-800 p-8 rounded shadow text-center transition-colors duration-200">
+          <h2 className="text-xl font-bold mb-2 dark:text-gray-200">Practice Mode</h2>
+          <p className="mb-4 dark:text-gray-300">Please <a href="/login" className="text-blue-600 dark:text-blue-400 underline">log in</a> or <a href="/register" className="text-green-600 dark:text-green-400 underline">register</a> to practice.</p>
         </div>
       </div>
     );
@@ -149,30 +149,33 @@ export default function PracticePage() {
   }, [selectedTopic]);
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-4">Practice Mode</h2>
+    <div className="container-layout py-8">
+      <h1 className="text-2xl font-bold mb-6 dark:text-gray-200">Practice Mode</h1>
       {!sessionStarted && !showSummary ? (
         <div className="mb-6 space-y-4">
           <div>
-            <label className="block mb-2">Select a topic to begin:</label>
+            <h2 className="text-xl font-bold mb-4 dark:text-gray-200">Select a topic to begin:</h2>
+          </div>
+          <div className="mb-6">
             <select
-              className="border p-2 rounded mr-2"
+              className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 transition-colors duration-200"
               value={selectedTopic}
               onChange={e => setSelectedTopic(e.target.value)}
+              required
             >
-              <option value="">-- Choose Topic --</option>
-              {topics.map(t => (
-                <option key={t} value={t}>{t}</option>
+              <option value="" className="dark:bg-gray-700 dark:text-gray-200">-- Choose Topic --</option>
+              {topics.map(topic => (
+                <option key={topic} value={topic} className="dark:bg-gray-700 dark:text-gray-200">{topic}</option>
               ))}
             </select>
           </div>
-          <div>
-            <label className="block mb-2">Session length:</label>
-            <div className="flex gap-2">
+          <div className="mb-6">
+            <label className="block mb-2 font-medium dark:text-gray-200">Number of questions:</label>
+            <div className="flex space-x-2">
               {PRACTICE_LENGTHS.map(len => (
                 <button
                   key={len}
-                  className={`px-3 py-1 rounded border-2 font-bold ${practiceLength===len ? "bg-blue-600 text-white border-blue-600" : "bg-white text-blue-700 border-blue-400"}`}
+                  className={`px-4 py-2 rounded ${practiceLength === len ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'} transition-colors duration-200`}
                   onClick={() => setPracticeLength(len)}
                 >
                   {len} Questions
@@ -181,8 +184,8 @@ export default function PracticePage() {
             </div>
           </div>
           <div>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={timerEnabled} onChange={e => setTimerEnabled(e.target.checked)} />
+            <label className="flex items-center gap-2 dark:text-gray-200">
+              <input type="checkbox" checked={timerEnabled} onChange={e => setTimerEnabled(e.target.checked)} className="accent-blue-600 dark:accent-blue-400" />
               Timed session (1 min/question)
             </label>
           </div>
@@ -195,18 +198,18 @@ export default function PracticePage() {
           </button>
         </div>
       ) : showSummary ? (
-        <div className="max-w-xl mx-auto mt-12 bg-white p-8 rounded-xl shadow text-center">
-          <h2 className="text-2xl font-bold mb-4">Practice Complete!</h2>
-          <div className="mb-2 text-lg">You answered <span className="font-bold">{score.correct}</span> out of <span className="font-bold">{questions.length}</span> questions correctly.</div>
-          <div className="mb-6 text-xl font-semibold">Score: <span className="text-blue-700">{questions.length ? Math.round((score.correct / questions.length) * 100) : 0}%</span></div>
+        <div className="max-w-xl mx-auto mt-12 bg-white dark:bg-gray-800 p-8 rounded-xl shadow text-center border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+          <h2 className="text-2xl font-bold mb-4 dark:text-gray-200">Practice Complete!</h2>
+          <div className="mb-2 text-lg dark:text-gray-300">You answered <span className="font-bold">{score.correct}</span> out of <span className="font-bold">{questions.length}</span> questions correctly.</div>
+          <div className="mb-6 text-xl font-semibold dark:text-gray-200">Score: <span className="text-blue-700 dark:text-blue-400">{questions.length ? Math.round((score.correct / questions.length) * 100) : 0}%</span></div>
           <div className="mb-6">
-            <h3 className="font-bold mb-2">Review Questions</h3>
+            <h3 className="font-bold mb-2 dark:text-gray-200">Review Questions</h3>
             <ul className="text-left space-y-4">
               {questions.map((q, i) => (
-                <li key={i} className="border-b pb-2">
-                  <div className="font-semibold">Q{i+1}: {q.question}</div>
-                  <div className="ml-2">Correct Answer: <span className="font-bold text-green-700">{q.answer}</span></div>
-                  {q.explanation && <div className="ml-2 text-sm text-gray-600">Explanation: {q.explanation}</div>}
+                <li key={i} className="border-b dark:border-gray-700 pb-2">
+                  <div className="font-semibold dark:text-gray-200">Q{i+1}: {q.question}</div>
+                  <div className="ml-2 dark:text-gray-300">Correct Answer: <span className="font-bold text-green-700 dark:text-green-400">{q.answer}</span></div>
+                  {q.explanation && <div className="ml-2 text-sm text-gray-600 dark:text-gray-400">Explanation: {q.explanation}</div>}
                 </li>
               ))}
             </ul>
@@ -235,19 +238,19 @@ export default function PracticePage() {
       )}
       {/* Recommendations card */}
       {sessionStarted && score.total > 0 && !showSummary && (
-        <div className="mt-10 max-w-xl mx-auto bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-xl shadow">
-          <h3 className="text-lg font-bold mb-2 text-yellow-800 flex items-center gap-2">📚 Recommended Study Areas</h3>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 p-6 rounded-xl shadow transition-colors duration-200">
+          <h3 className="text-lg font-bold mb-2 text-yellow-800 dark:text-yellow-400 flex items-center gap-2 transition-colors duration-200">📚 Recommended Study Areas</h3>
           {Object.keys(mistakesByTopic).length === 0 ? (
-            <div className="text-green-700">Great job! No weak areas detected this session.</div>
+            <div className="text-green-700 dark:text-green-400 transition-colors duration-200">Great job! No weak areas detected this session.</div>
           ) : (
             <ul className="list-disc ml-6 space-y-1">
               {Object.entries(mistakesByTopic)
                 .sort((a, b) => b[1] - a[1])
                 .map(([topic, count]) => (
                   <li key={topic}>
-                    <span className="font-semibold text-yellow-900">{topic}</span>:
-                    <span className="ml-2 text-yellow-700">Missed {count} time{count > 1 ? 's' : ''}</span>
-                    <div className="text-sm text-gray-700 ml-2">Suggested: {topicToChapter[topic]}</div>
+                    <span className="font-semibold text-yellow-900 dark:text-yellow-300 transition-colors duration-200">{topic}</span>:
+                    <span className="ml-2 text-yellow-700 dark:text-yellow-400 transition-colors duration-200">Missed {count} time{count > 1 ? 's' : ''}</span>
+                    <div className="text-sm text-gray-700 dark:text-gray-400 ml-2 transition-colors duration-200">Suggested: {topicToChapter[topic]}</div>
                   </li>
                 ))}
             </ul>

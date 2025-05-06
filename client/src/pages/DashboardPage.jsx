@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSubject } from "../contexts/SubjectContext";
-import { useNavigate } from "react-router-dom";
+import { useDashboardStats } from "../hooks/useDashboardStats";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
+import ErrorDisplay from "../components/ui/ErrorDisplay";
 
 /**
  * @typedef {{ total: number, correct: number, incorrect: number }} TopicStats
@@ -14,80 +16,58 @@ import { useNavigate } from "react-router-dom";
  * @param {number} pct
  */
 function getBadge(pct) {
-  if (pct >= 90) return <span className="ml-2 px-2 py-1 rounded bg-green-200 text-green-800 text-xs font-bold">Expert</span>;
-  if (pct >= 75) return <span className="ml-2 px-2 py-1 rounded bg-yellow-200 text-yellow-800 text-xs font-bold">Proficient</span>;
-  if (pct >= 50) return <span className="ml-2 px-2 py-1 rounded bg-orange-200 text-orange-800 text-xs font-bold">Learning</span>;
-  return <span className="ml-2 px-2 py-1 rounded bg-red-200 text-red-800 text-xs font-bold">Needs Work</span>;
+  if (pct >= 90) return { 
+    label: 'Expert', 
+    className: 'badge-success',
+    animationClass: ''
+  };
+  if (pct >= 75) return { 
+    label: 'Proficient', 
+    className: 'badge-success',
+    animationClass: ''
+  };
+  if (pct >= 50) return { 
+    label: 'Learning', 
+    className: 'badge-warning',
+    animationClass: ''
+  };
+  return { 
+    label: 'Needs Work', 
+    className: 'badge-danger',
+    animationClass: 'hover:animate-[shake_0.5s_ease-in-out]'
+  };
+}
+
+/**
+ * @param {number} pct
+ * @returns {string} CSS color class for progress ring
+ */
+function getProgressColor(pct) {
+  if (pct >= 90) return 'text-green-500 dark:text-green-400';
+  if (pct >= 75) return 'text-green-400 dark:text-green-300';
+  if (pct >= 50) return 'text-yellow-500 dark:text-yellow-400';
+  return 'text-red-500 dark:text-red-400';
 }
 
 import MobileNavBar from "../components/MobileNavBar";
 import CustomQuestionGenerator from "../components/CustomQuestionGenerator";
 
 export default function DashboardPage() {
-  const { user, token, isTokenExpired, handleAuthError } = useAuth();
+  const { user } = useAuth();
   const { selectedSubject } = useSubject();
   // Get topics from the selected subject
   const topics = selectedSubject.groups.flatMap(g => g.topics);
-  const navigate = useNavigate();
-  const [stats, setStats] = React.useState(/** @type {StatsMap} */ ({}));
-  const [loading, setLoading] = React.useState(/** @type {boolean} */ (true));
-  const [error, setError] = React.useState(/** @type {string} */ (""));
-  const [lastUpdated, setLastUpdated] = React.useState(/** @type {Date|null} */ (null));
-
-  const fetchStats = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      // Check if token is expired before making the request
-      if (!token || isTokenExpired()) {
-        console.log("Token expired or missing, redirecting to login");
-        navigate("/login", { state: { message: "Please log in to view your dashboard." } });
-        return;
-      }
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user-stats`, {
-        headers: { 
-          Authorization: `Bearer ${token}` 
-        }
-      });
-      
-      // Handle auth errors
-      if (res.status === 401 || res.status === 403) {
-        handleAuthError(res.status);
-        return;
-      }
-      
-      if (!res.ok) throw new Error("Failed to fetch stats");
-      
-      const data = await res.json();
-      setStats(data && typeof data === 'object' ? data : {});
-      setLastUpdated(new Date());
-      console.log('Dashboard stats:', data);
-    } catch (err) {
-      console.error("Stats fetch error:", err);
-      setError("Could not load stats from server.");
-      setStats({});
-    }
-    setLoading(false);
-  };
-
-  React.useEffect(() => {
-    if (!user || !token) {
-      navigate("/login");
-      return;
-    }
-    fetchStats();
-  }, [user, token, navigate]);
-
-  if (!user) {
-    return (
-      <div className="min-h-[90vh] flex flex-col items-center justify-center">
-        <div className="bg-white p-8 rounded shadow text-center">
-          <h2 className="text-xl font-bold mb-2">Dashboard</h2>
-          <p className="mb-4">Please <a href="/login" className="text-blue-600 underline">log in</a> or <a href="/register" className="text-green-600 underline">register</a> to view your dashboard.</p>
-        </div>
-      </div>
-    );
+  const { stats, isLoading, error, refetch, resetStats, isResetting } = useDashboardStats();
+  const [lastUpdated] = React.useState(new Date());
+  
+  // Show loading state
+  if (isLoading) {
+    return <LoadingSpinner fullPage text="Loading your dashboard..." />;
+  }
+  
+  // Show error state with retry button
+  if (error) {
+    return <ErrorDisplay error={error} fullPage onRetry={refetch} />;
   }
 
   // Defensive: always treat stats as {} if null/undefined
@@ -104,120 +84,200 @@ export default function DashboardPage() {
     }))
     .sort((a, b) => a.pct - b.pct)
     .slice(0, 2);
+    
+  // Prepare topic cards data
+  const topicCards = topics.map(topic => {
+    const s = safeStats[topic] || { total: 0, correct: 0, incorrect: 0 };
+    const pct = s.total ? Math.round((s.correct / s.total) * 100) : 0;
+    const badge = getBadge(pct);
+    const progressColor = getProgressColor(pct);
+    
+    return {
+      topic,
+      stats: s,
+      percentage: pct,
+      badge,
+      progressColor
+    };
+  });
 
   function handleReset() {
-    if (window.confirm("Reset all your ExamBuddy progress?")) {
-      localStorage.removeItem("examBuddyStats");
-      setStats({});
+    if (window.confirm("Are you sure you want to reset all your progress? This cannot be undone.")) {
+      resetStats();
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-blue-500 animate-spin mr-3">
-          <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
-        </div>
-        <span className="text-lg font-semibold">Loading your dashboard...</span>
-      </div>
-    );
-  }
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-red-600">
-        <div className="mb-2">{error}</div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded font-bold" onClick={fetchStats}>Retry</button>
-      </div>
-    );
-  }
-  if (stats === null) {
-    return (
-      <div className="flex items-center justify-center h-64 text-gray-500">No stats available.</div>
-    );
-  }
-
   return (
-    <div className="pb-20 px-2 sm:px-0 max-w-2xl mx-auto">
+    <div className="pb-20 container-layout">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center mb-4 gap-2 sm:gap-0">
-        <h2 className="text-2xl font-bold text-blue-800 tracking-tight">Dashboard</h2>
-        <button className="sm:ml-auto w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow hover:bg-blue-600 transition" onClick={fetchStats}>Refresh</button>
+      <div className="flex flex-col sm:flex-row items-center mb-6 gap-2 sm:gap-0">
+        <h2 className="text-2xl font-bold text-primary-600 dark:text-primary-400 tracking-tight">Dashboard</h2>
+        <button 
+          className="sm:ml-auto w-full sm:w-auto btn-primary" 
+          onClick={refetch}
+        >
+          <span className="flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </span>
+        </button>
       </div>
+      
       {lastUpdated && (
-        <div className="text-xs text-gray-500 mb-2 text-center sm:text-left">Last updated: {lastUpdated.toLocaleTimeString()}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center sm:text-left">
+          Last updated: {lastUpdated.toLocaleTimeString()}
+        </div>
       )}
+      
       {/* Stats Widget */}
-      <div className="mb-4 flex flex-col sm:flex-row flex-wrap gap-4 items-center">
-        <div className="flex-1 w-full bg-gradient-to-br from-blue-100 via-white to-blue-50 border-l-4 border-blue-400 p-6 rounded-2xl shadow-xl mb-2 sm:mb-0">
+      <div className="mb-8 grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3 card bg-gradient-to-br from-primary-50 to-white dark:from-primary-900 dark:to-gray-800 border-l-4 border-primary-400 dark:border-primary-500 p-6">
           {typeof allAnswered !== 'number' || isNaN(allAnswered) || allAnswered === 0 ? (
-            <div className="text-gray-500 text-center">No progress yet. Start practicing or testing to see your stats here!</div>
+            <div className="text-gray-500 dark:text-gray-400 text-center">No progress yet. Start practicing or testing to see your stats here!</div>
           ) : (
-            <>
-              <div className="font-bold text-blue-800 text-xl mb-1">Total Questions Answered: <span className="text-blue-900">{allAnswered}</span></div>
-              <div className="text-green-700 text-lg">Correct: {allCorrect} ({allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}%)</div>
-            </>
+            <div className="flex flex-col sm:flex-row items-center justify-between">
+              <div>
+                <div className="font-bold text-primary-700 dark:text-primary-300 text-xl mb-1">Total Questions: <span className="text-primary-800 dark:text-primary-200">{allAnswered}</span></div>
+                <div className="text-green-600 dark:text-green-400 text-lg">Correct: {allCorrect} ({allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}%)</div>
+              </div>
+              
+              {/* Progress ring */}
+              <div className="relative w-24 h-24 mt-4 sm:mt-0">
+                <svg className="w-full h-full" viewBox="0 0 36 36">
+                  <path
+                    className="stroke-current text-gray-200 dark:text-gray-700"
+                    fill="none"
+                    strokeWidth="3"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className={`stroke-current ${allAnswered ? getProgressColor(Math.round(allCorrect/allAnswered*100)) : 'text-gray-400'}`}
+                    fill="none"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={`${allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}, 100`}
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <text x="18" y="20.35" className="text-2xl font-bold" textAnchor="middle" fill="currentColor">
+                    {allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}%
+                  </text>
+                </svg>
+              </div>
+            </div>
           )}
         </div>
-        <button className="w-full sm:w-auto bg-red-600 text-white px-4 py-2 rounded-full font-bold shadow hover:bg-red-700 transition" onClick={handleReset}>Reset Progress</button>
+        
+        <div className="card flex flex-col justify-center items-center p-6">
+          <button 
+            className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white px-4 py-3 rounded-md font-medium shadow transition disabled:opacity-50 flex items-center justify-center gap-2" 
+            onClick={handleReset}
+            disabled={isResetting}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            {isResetting ? 'Resetting...' : 'Reset Progress'}
+          </button>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">This will delete all your progress data</p>
+        </div>
       </div>
-      {/* Progress Table */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2 text-blue-700">Progress by Topic</h3>
+      
+      {/* Progress Cards */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-primary-600 dark:text-primary-400">Progress by Topic</h3>
+        </div>
+        
         {typeof allAnswered !== 'number' || isNaN(allAnswered) || allAnswered === 0 ? (
-          <div className="text-gray-500">No data yet. Practice or take a test to see your topic breakdown.</div>
+          <div className="card p-6 text-gray-500 dark:text-gray-400 text-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <p>No data yet. Practice or take a test to see your topic breakdown.</p>
+            <button className="btn-primary mt-4">Start Practice</button>
+          </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl shadow border border-gray-200 bg-white">
-            <table className="min-w-full text-left">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-3 py-2">Topic</th>
-                  <th className="px-3 py-2">Answered</th>
-                  <th className="px-3 py-2">Correct (%)</th>
-                  <th className="px-3 py-2">Incorrect</th>
-                  <th className="px-3 py-2">Mastery</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topics.map(topic => {
-                  const s = safeStats[topic] || { total: 0, correct: 0, incorrect: 0 };
-                  const pct = s.total ? Math.round((s.correct / s.total) * 100) : 0;
-                  return (
-                    <tr key={topic} className="border-b">
-                      <td className="px-3 py-2 font-semibold">{topic}</td>
-                      <td className="px-3 py-2">{s.total}</td>
-                      <td className="px-3 py-2">{pct}%</td>
-                      <td className="px-3 py-2">{s.incorrect}</td>
-                      <td className="px-3 py-2">{getBadge(pct)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {topicCards.map(card => (
+              <div key={card.topic} className="group bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all p-4 relative overflow-hidden border border-gray-200 dark:border-gray-700">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1">{card.topic}</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Answered: {card.stats.total}</p>
+                
+                <div className="flex items-center justify-between mt-2">
+                  <span className={`text-sm font-medium ${card.percentage >= 75 ? 'text-green-600 dark:text-green-400' : card.percentage >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {card.percentage}% Correct
+                  </span>
+                  <span className={`${card.badge.className} ${card.badge.animationClass}`}>
+                    {card.badge.label}
+                  </span>
+                </div>
+                
+                {/* Progress bar */}
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-2">
+                  <div 
+                    className={`h-1.5 rounded-full ${card.percentage >= 75 ? 'bg-green-500' : card.percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                    style={{ width: `${card.percentage}%` }}
+                  ></div>
+                </div>
+                
+                {/* Button only shows on hover */}
+                <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <button className="w-full text-sm btn-primary py-1">
+                    Review Topic
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
+      
       {/* Weakest Areas Card */}
-      <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 border-l-4 border-yellow-400 p-6 rounded-2xl shadow-xl">
-        <h3 className="text-lg font-bold mb-1 text-yellow-800">📈 Your Weakest Areas</h3>
+      <div className="card bg-gradient-to-br from-accent-50 to-white dark:from-gray-900 dark:to-gray-800 border-l-4 border-accent-400 dark:border-accent-500 p-6 mb-8 transition-colors duration-200">
+        <h3 className="text-lg font-bold mb-3 text-accent-700 dark:text-accent-300 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          Your Weakest Areas
+        </h3>
+        
         {allAnswered === 0 ? (
-          <div className="text-gray-500">No data yet. Weak areas will be shown here after you answer some questions.</div>
+          <div className="text-gray-500 dark:text-gray-400">No data yet. Weak areas will be shown here after you answer some questions.</div>
         ) : weakTopics.length === 0 ? (
-          <div className="text-green-700">No weak areas detected. Keep up the great work!</div>
+          <div className="text-green-600 dark:text-green-400 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            No weak areas detected. Keep up the great work!
+          </div>
         ) : (
-          <ul className="list-disc ml-6">
+          <div className="space-y-4">
             {weakTopics.map(w => (
-              <li key={w.topic}>
-                <span className="font-semibold text-yellow-900">{w.topic}</span>: <span className="text-yellow-700">{Math.round(w.pct)}% correct</span>
-                {w.pct < 75 && <span className="ml-2 text-sm text-yellow-800">Review this topic for mastery!</span>}
-              </li>
+              <div key={w.topic} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+                <div>
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">{w.topic}</h4>
+                  <div className="flex items-center mt-1">
+                    <span className={`text-sm ${w.pct < 50 ? 'text-red-600 dark:text-red-400 animate-pulse-once' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                      {Math.round(w.pct)}% correct
+                    </span>
+                    <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                      Needs improvement
+                    </span>
+                  </div>
+                </div>
+                <button className="mt-2 sm:mt-0 btn-primary text-sm py-1 px-3">
+                  Practice Now
+                </button>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
+      
       {/* Custom Question Generator */}
-      <div className="mb-6">
+      <div className="mb-20">
         <CustomQuestionGenerator />
       </div>
+      
       {/* Mobile NavBar */}
       <MobileNavBar />
     </div>

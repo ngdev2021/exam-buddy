@@ -1,3 +1,147 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Base styles */
+@layer base {
+  html {
+    @apply text-gray-800 scroll-smooth;
+  }
+  
+  body {
+    @apply bg-gray-50 font-sans transition-colors duration-200;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold;
+  }
+  
+  h1 {
+    @apply text-3xl sm:text-4xl;
+  }
+  
+  h2 {
+    @apply text-2xl sm:text-3xl;
+  }
+  
+  h3 {
+    @apply text-xl sm:text-2xl;
+  }
+  
+  /* Dark mode styles */
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+  
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-white;
+  }
+  
+  /* Force dark mode backgrounds */
+  .dark .bg-white {
+    @apply bg-gray-800 !important;
+  }
+  
+  .dark .bg-gray-50 {
+    @apply bg-gray-900 !important;
+  }
+  
+  .dark .bg-gray-100 {
+    @apply bg-gray-800 !important;
+  }
+  
+  .dark .bg-gray-200 {
+    @apply bg-gray-700 !important;
+  }
+  
+  /* Force dark mode text colors */
+  .dark .text-gray-800 {
+    @apply text-gray-100 !important;
+  }
+  
+  .dark .text-gray-700 {
+    @apply text-gray-200 !important;
+  }
+  
+  .dark .text-gray-600 {
+    @apply text-gray-300 !important;
+  }
+  
+  /* Force dark mode borders */
+  .dark .border-gray-200 {
+    @apply border-gray-700 !important;
+  }
+  
+  .dark .border-gray-300 {
+    @apply border-gray-600 !important;
+  }
+}
+
+/* Component styles */
+@layer components {
+  .container-layout {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-card hover:shadow-card-hover transition-shadow duration-300 p-4;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-accent-500 hover:bg-accent-600 text-white font-medium py-2 px-4 rounded transition-colors;
+  }
+  
+  .btn-outline {
+    @apply border border-primary-600 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900 font-medium py-2 px-4 rounded transition-colors;
+  }
+  
+  .input-field {
+    @apply w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .badge-danger {
+    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 px-2 py-1 rounded-full text-xs font-medium;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-pulse-once {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 1;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .7; }
+  }
+}
