@@ -10,14 +10,34 @@ const MOCK_USERS = [
     name: 'Test User',
     email: 'test@example.com',
     password: 'password123', // In a real app, passwords would be hashed
-    role: 'user'
+    role: 'user',
+    bio: 'Insurance professional studying for certification exams. Focused on property and casualty insurance.',
+    createdAt: '2024-12-15T10:30:00Z',
+    preferences: {
+      darkMode: true,
+      notifications: {
+        email: true,
+        app: true,
+        studyReminders: true
+      }
+    }
   },
   {
     id: 'dev-admin-1',
     name: 'Admin User',
     email: 'admin@example.com',
     password: 'admin123',
-    role: 'admin'
+    role: 'admin',
+    bio: 'ExamBuddy administrator and content creator. Expert in insurance regulations and compliance.',
+    createdAt: '2024-10-01T08:15:00Z',
+    preferences: {
+      darkMode: false,
+      notifications: {
+        email: true,
+        app: true,
+        studyReminders: false
+      }
+    }
   }
 ];
 
@@ -55,7 +75,10 @@ export const mockAuthService = {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        bio: user.bio,
+        createdAt: user.createdAt,
+        preferences: user.preferences
       },
       token
     };
@@ -70,13 +93,23 @@ export const mockAuthService = {
       throw new Error('User with this email already exists');
     }
     
-    // Create new user
+    // Create new user with default values
     const newUser = {
       id: `dev-user-${MOCK_USERS.length + 1}`,
       name,
       email,
       password,
-      role: 'user'
+      role: 'user',
+      bio: '',
+      createdAt: new Date().toISOString(),
+      preferences: {
+        darkMode: false,
+        notifications: {
+          email: true,
+          app: true,
+          studyReminders: true
+        }
+      }
     };
     
     // In a real implementation, we would save this user
@@ -90,7 +123,10 @@ export const mockAuthService = {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        bio: newUser.bio,
+        createdAt: newUser.createdAt,
+        preferences: newUser.preferences
       },
       token
     };
@@ -142,6 +178,52 @@ export const mockAuthService = {
         'Insurance Regulations': { total: 20, correct: 15, incorrect: 5 }
       }
     };
+  },
+  
+  // Update user profile
+  updateUser: async (userData, token) => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    if (!token || !token.startsWith('mock_token_')) {
+      throw new Error('Unauthorized');
+    }
+    
+    try {
+      const payload = JSON.parse(atob(token.replace('mock_token_', '')));
+      
+      // Check if token is expired
+      if (payload.exp < Math.floor(Date.now() / 1000)) {
+        throw new Error('Token expired');
+      }
+      
+      // Find user in mock database
+      const userIndex = MOCK_USERS.findIndex(u => u.id === payload.sub);
+      
+      if (userIndex === -1) {
+        throw new Error('User not found');
+      }
+      
+      // Update user data
+      MOCK_USERS[userIndex] = {
+        ...MOCK_USERS[userIndex],
+        name: userData.name || MOCK_USERS[userIndex].name,
+        email: userData.email || MOCK_USERS[userIndex].email,
+        bio: userData.bio || MOCK_USERS[userIndex].bio,
+      };
+      
+      // Return updated user (excluding password)
+      return {
+        id: MOCK_USERS[userIndex].id,
+        name: MOCK_USERS[userIndex].name,
+        email: MOCK_USERS[userIndex].email,
+        role: MOCK_USERS[userIndex].role,
+        bio: MOCK_USERS[userIndex].bio,
+        createdAt: MOCK_USERS[userIndex].createdAt || new Date().toISOString()
+      };
+    } catch (error) {
+      throw new Error('Failed to update profile');
+    }
   }
 };
 

@@ -265,6 +265,48 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Update user function
+  async function updateUser(userData) {
+    try {
+      // Use mock service in development mode
+      if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
+        console.log("Using mock update user service");
+        const updatedUser = await mockAuthService.updateUser(userData, token);
+        
+        // Update local storage
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        return updatedUser;
+      }
+      
+      // Production update user flow
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        if (handleAuthError(response.status)) return;
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.details || "Failed to update profile");
+      }
+
+      const updatedUser = await response.json();
+      
+      // Update local storage
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error("Update user error:", error);
+      throw error;
+    }
+  }
+
   // Logout function
   const logout = () => {
     setToken(null);
@@ -284,7 +326,8 @@ export function AuthProvider({ children }) {
       loading,
       isTokenExpired,
       verifyToken,
-      handleAuthError
+      handleAuthError,
+      updateUser
     }}>
       {children}
     </AuthContext.Provider>

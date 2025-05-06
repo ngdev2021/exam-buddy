@@ -16,31 +16,59 @@ export function SubjectProvider({ children }) {
   // Load user preference on login
   useEffect(() => {
     if (user && token) {
-      fetch(`${import.meta.env.VITE_API_URL}/api/user-preference`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data && data.currentSubject) {
-            const subj = subjects.find(s => s.name === data.currentSubject);
-            if (subj) setSelectedSubject(subj);
-          }
+      // Check if we're in development mode with mock auth
+      if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
+        // Use user preferences from mock data if available
+        if (user.preferences && user.preferences.currentSubject) {
+          const subj = subjects.find(s => s.name === user.preferences.currentSubject);
+          if (subj) setSelectedSubject(subj);
+        }
+      } else {
+        // Production code - fetch from API
+        fetch(`${import.meta.env.VITE_API_URL}/api/user-preference`, {
+          headers: { Authorization: `Bearer ${token}` }
         })
-        .catch(err => console.error("Failed to load subject preference:", err));
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data && data.currentSubject) {
+              const subj = subjects.find(s => s.name === data.currentSubject);
+              if (subj) setSelectedSubject(subj);
+            }
+          })
+          .catch(err => console.error("Failed to load subject preference:", err));
+      }
     }
   }, [user, token]);
 
   // Save preference when it changes
   useEffect(() => {
     if (user && token && selectedSubject) {
-      fetch(`${import.meta.env.VITE_API_URL}/api/user-preference`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({ currentSubject: selectedSubject.name })
-      }).catch(err => console.error("Failed to save subject preference:", err));
+      // Check if we're in development mode with mock auth
+      if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
+        // In mock mode, we would update the user preferences in local storage
+        if (user && user.id) {
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            try {
+              const userData = JSON.parse(storedUser);
+              userData.preferences = { ...userData.preferences, currentSubject: selectedSubject.name };
+              localStorage.setItem("user", JSON.stringify(userData));
+            } catch (err) {
+              console.error("Failed to update subject preference in local storage:", err);
+            }
+          }
+        }
+      } else {
+        // Production code - save to API
+        fetch(`${import.meta.env.VITE_API_URL}/api/user-preference`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` 
+          },
+          body: JSON.stringify({ currentSubject: selectedSubject.name })
+        }).catch(err => console.error("Failed to save subject preference:", err));
+      }
     }
   }, [selectedSubject, user, token]);
   return (
