@@ -60,9 +60,19 @@ router.post("/", authenticateToken, async (req, res) => {
 // POST /api/user-stats/reset (reset stats, auth required)
 router.post("/reset", authenticateToken, async (req, res) => {
   try {
-    await UserStat.destroy({ where: { userId: req.user.id } });
-    res.json({ status: "reset" });
+    const userId = req.user?.userId;
+    if (!userId) {
+      console.error("No user in token:", req.user);
+      return res.status(401).json({ error: "No user in token" });
+    }
+    
+    // Delete all stats for this user
+    await UserStat.destroy({ where: { userId } });
+    console.log(`Reset stats for user ${userId}`);
+    
+    res.json({ status: "reset", message: "Stats reset successfully" });
   } catch (err) {
+    console.error("Error in /api/user-stats/reset POST:", err);
     res.status(500).json({ error: "Failed to reset stats." });
   }
 });
