@@ -20,7 +20,7 @@ function App() {
       <NavigationMenu />
       <MobileNavBar />
       <ErrorBoundary>
-        <main className="max-w-4xl mx-auto pt-8 pb-24 px-4">
+        <main className="max-w-4xl mx-auto pt-16 pb-24 px-4 md:pt-8">
           <Routes>
             {/* Public routes */}
             <Route path="login" element={<LoginPage />} />
