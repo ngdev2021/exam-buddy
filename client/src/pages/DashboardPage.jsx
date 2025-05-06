@@ -160,7 +160,7 @@ export default function DashboardPage() {
                     strokeDasharray={`${allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}, 100`}
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
-                  <text x="18" y="20.35" className="text-2xl font-bold" textAnchor="middle" fill="currentColor">
+                  <text x="18" y="20.35" className="text-lg font-bold" textAnchor="middle" fill="currentColor">
                     {allAnswered ? Math.round(allCorrect/allAnswered*100) : 0}%
                   </text>
                 </svg>
@@ -221,9 +221,11 @@ export default function DashboardPage() {
                 
                 {/* Button only shows on hover */}
                 <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <button className="w-full text-sm btn-primary py-1">
+                  <a 
+                    href={`/practice?topic=${encodeURIComponent(topic)}`} 
+                    className="block w-full text-center text-sm btn-primary py-1">
                     Review Topic
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}

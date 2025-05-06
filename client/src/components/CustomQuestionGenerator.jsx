@@ -27,6 +27,10 @@ export default function CustomQuestionGenerator() {
   const [userStats, setUserStats] = useState(null);
   
   React.useEffect(() => {
+    // Clear questions when subject changes
+    setQuestions([]);
+    setSelectedTopic("");
+    
     // Fetch user stats for weak topics - this would normally come from your stats API
     // For now we'll simulate it
     const fetchUserStats = async () => {
