@@ -46,21 +46,24 @@ export default function NavigationMenu() {
         
         <div className="flex items-center gap-4">
           <div className="relative">
-            <select
-              className="input-field py-1.5 px-3 pr-8 text-sm rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200"
-              value={selectedSubject.name}
-              onChange={e => {
-                const subj = subjects.find(s => s.name === e.target.value);
-                setSelectedSubject(subj);
-              }}
-              aria-label="Select subject"
-            >
-              {subjects.map(s => (
-                <option key={s.name} value={s.name} className="dark:bg-gray-700 dark:text-gray-200">
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center">
+              <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-2">Subject:</label>
+              <select
+                className="input-field py-1.5 px-3 pr-8 text-sm rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-medium"
+                value={selectedSubject.name}
+                onChange={e => {
+                  const subj = subjects.find(s => s.name === e.target.value);
+                  setSelectedSubject(subj);
+                }}
+                aria-label="Select subject"
+              >
+                {subjects.map(s => (
+                  <option key={s.name} value={s.name} className="dark:bg-gray-700 dark:text-gray-200">
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           
           <ThemeToggle />
