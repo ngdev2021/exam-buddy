@@ -58,8 +58,9 @@ export default function DashboardPage() {
   // Get topics from the selected subject
   const topics = selectedSubject.groups.flatMap(g => g.topics);
   const { stats, isLoading, error, refetch, resetStats, isResetting } = useDashboardStats();
-  const [lastUpdated] = React.useState(new Date());
-  
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   // Show loading state
   if (isLoading) {
     return <LoadingSpinner fullPage text="Loading your dashboard..." />;
@@ -100,8 +101,6 @@ export default function DashboardPage() {
       progressColor
     };
   });
-
-  const [resetSuccess, setResetSuccess] = useState(false);
 
   function handleReset() {
     if (window.confirm("Are you sure you want to reset all your progress? This cannot be undone.")) {
