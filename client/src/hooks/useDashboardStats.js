@@ -85,6 +85,16 @@ export function useDashboardStats() {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Clear the cached stats data in the query client
+      queryClient.setQueryData(['dashboardStats'], {
+        // Return empty stats object to simulate reset
+        totalQuestions: 0,
+        correctAnswers: 0,
+        incorrectAnswers: 0,
+        averageScore: 0,
+        topicPerformance: {}
+      });
+      
       // Return a simulated successful response
       return { 
         success: true, 

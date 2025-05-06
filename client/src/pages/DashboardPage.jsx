@@ -108,6 +108,12 @@ export default function DashboardPage() {
         resetStats();
         // Show success message
         setResetSuccess(true);
+        // Update the lastUpdated timestamp
+        setLastUpdated(new Date());
+        // Force a refetch to get the latest data
+        setTimeout(() => {
+          refetch();
+        }, 1500);
         // Hide success message after 3 seconds
         setTimeout(() => setResetSuccess(false), 3000);
       } catch (error) {
