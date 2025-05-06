@@ -222,7 +222,7 @@ export default function DashboardPage() {
                 {/* Button only shows on hover */}
                 <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <a 
-                    href={`/practice?topic=${encodeURIComponent(topic)}`} 
+                    href={`/practice?topic=${encodeURIComponent(card.topic)}`} 
                     className="block w-full text-center text-sm btn-primary py-1">
                     Review Topic
                   </a>
