@@ -59,15 +59,18 @@ export function setupMockApiInterceptors() {
       if (url.includes('/api/user-stats')) {
         console.log('Intercepting user-stats request');
         
-        // Handle different HTTP methods
+        // Handle reset endpoint specifically
+        if (url.includes('/api/user-stats/reset') && options && options.method === 'POST') {
+          console.log('Intercepting stats reset request');
+          return mockSuccessResponse({ success: true, message: 'Stats reset successfully' });
+        }
+        
+        // Handle other user-stats endpoints
         if (!options || options.method === 'GET' || !options.method) {
           return mockSuccessResponse(MOCK_USER_STATS);
         } else if (options.method === 'POST') {
           // Update stats (would parse body here in a real implementation)
           return mockSuccessResponse({ success: true, message: 'Stats updated successfully' });
-        } else if (url.includes('/reset') && options.method === 'POST') {
-          // Reset stats
-          return mockSuccessResponse({ success: true, message: 'Stats reset successfully' });
         }
       }
       

@@ -55,8 +55,8 @@ export function useDashboardStats() {
       throw new Error('Authentication required');
     }
 
-    // Use mock service in development mode
-    if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
+    // Use mock service when VITE_USE_MOCK_AUTH is true (in both dev and prod)
+    if (import.meta.env.VITE_USE_MOCK_AUTH === 'true') {
       console.log('Using mock stats reset service');
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
