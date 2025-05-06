@@ -11,6 +11,7 @@ import RegisterPage from "./pages/RegisterPage";
 import CalculatorPage from "./pages/CalculatorPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -62,6 +63,11 @@ function App() {
             <Route path="settings" element={
               <ProtectedRoute>
                 <SettingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="change-password" element={
+              <ProtectedRoute>
+                <ChangePasswordPage />
               </ProtectedRoute>
             } />
             

@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { SubjectProvider } from "./contexts/SubjectContext";
 import { QueryProvider } from "./context/QueryProvider";
 import { ThemeProvider } from "./context/ThemeContext";
+import { AppearanceProvider } from "./context/AppearanceContext";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <ThemeProvider>
           <AuthProvider>
             <SubjectProvider>
-              <App />
+              <AppearanceProvider>
+                <App />
+              </AppearanceProvider>
             </SubjectProvider>
           </AuthProvider>
         </ThemeProvider>

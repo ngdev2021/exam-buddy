@@ -306,6 +306,39 @@ export function AuthProvider({ children }) {
       throw error;
     }
   }
+  
+  // Update password function
+  async function updatePassword(currentPassword, newPassword) {
+    try {
+      // Use mock service in development mode
+      if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
+        console.log("Using mock update password service");
+        await mockAuthService.updatePassword(currentPassword, newPassword, token);
+        return true;
+      }
+      
+      // Production update password flow
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      if (!response.ok) {
+        if (handleAuthError(response.status)) return;
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.details || "Failed to update password");
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Update password error:", error);
+      throw error;
+    }
+  }
 
   // Logout function
   const logout = () => {
@@ -327,7 +360,8 @@ export function AuthProvider({ children }) {
       isTokenExpired,
       verifyToken,
       handleAuthError,
-      updateUser
+      updateUser,
+      updatePassword
     }}>
       {children}
     </AuthContext.Provider>

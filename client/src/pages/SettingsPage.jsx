@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSubject } from "../contexts/SubjectContext";
+import { useAppearance } from "../context/AppearanceContext";
 import { useNavigate } from "react-router-dom";
 import ThemeToggle from "../components/ui/ThemeToggle";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { subjects, selectedSubject, setSelectedSubject } = useSubject();
+  const { appearanceSettings, updateAppearanceSettings, isLoading: isAppearanceLoading } = useAppearance();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState({
     email: true,
@@ -14,22 +16,39 @@ export default function SettingsPage() {
     studyReminders: true,
     newFeatures: false,
   });
-  const [accessibility, setAccessibility] = useState({
-    highContrast: false,
-    largeText: false,
-    reduceMotion: false,
-  });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
+  
+  // Load user preferences when component mounts
+  useEffect(() => {
+    if (user && user.preferences) {
+      // Load notification preferences
+      if (user.preferences.notifications) {
+        setNotifications({
+          email: user.preferences.notifications.email ?? true,
+          app: user.preferences.notifications.app ?? true,
+          studyReminders: user.preferences.notifications.studyReminders ?? true,
+          newFeatures: user.preferences.notifications.newFeatures ?? false,
+        });
+      }
+    }
+  }, [user]);
 
   const handleNotificationChange = (e) => {
     const { name, checked } = e.target;
     setNotifications(prev => ({ ...prev, [name]: checked }));
   };
 
-  const handleAccessibilityChange = (e) => {
+  const handleAccessibilityChange = async (e) => {
     const { name, checked } = e.target;
-    setAccessibility(prev => ({ ...prev, [name]: checked }));
+    try {
+      await updateAppearanceSettings({ [name]: checked });
+    } catch (error) {
+      setMessage({
+        text: `Failed to update ${name} setting. Please try again.`,
+        type: "error"
+      });
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -37,12 +56,28 @@ export default function SettingsPage() {
     setMessage({ text: "", type: "" });
     
     try {
-      // In a real app, this would save to an API
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
-      setMessage({ 
-        text: "Settings saved successfully!", 
-        type: "success" 
-      });
+      // Update user preferences with notification settings
+      if (user && user.id) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            userData.preferences = { 
+              ...userData.preferences,
+              notifications: notifications
+            };
+            localStorage.setItem("user", JSON.stringify(userData));
+            
+            setMessage({ 
+              text: "Settings saved successfully!", 
+              type: "success" 
+            });
+          } catch (err) {
+            console.error("Failed to update notification preferences in local storage:", err);
+            throw new Error("Failed to save settings");
+          }
+        }
+      }
     } catch (error) {
       setMessage({ 
         text: "Failed to save settings. Please try again.", 
@@ -137,8 +172,9 @@ export default function SettingsPage() {
                 <input
                   type="checkbox"
                   name="highContrast"
-                  checked={accessibility.highContrast}
+                  checked={appearanceSettings.highContrast}
                   onChange={handleAccessibilityChange}
+                  disabled={isAppearanceLoading}
                   className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <span className="text-gray-700 dark:text-gray-300">High contrast mode</span>
@@ -148,8 +184,9 @@ export default function SettingsPage() {
                 <input
                   type="checkbox"
                   name="largeText"
-                  checked={accessibility.largeText}
+                  checked={appearanceSettings.largeText}
                   onChange={handleAccessibilityChange}
+                  disabled={isAppearanceLoading}
                   className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <span className="text-gray-700 dark:text-gray-300">Larger text</span>
@@ -159,8 +196,9 @@ export default function SettingsPage() {
                 <input
                   type="checkbox"
                   name="reduceMotion"
-                  checked={accessibility.reduceMotion}
+                  checked={appearanceSettings.reduceMotion}
                   onChange={handleAccessibilityChange}
+                  disabled={isAppearanceLoading}
                   className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
                 <span className="text-gray-700 dark:text-gray-300">Reduce motion</span>
@@ -224,7 +262,7 @@ export default function SettingsPage() {
         <div className="flex justify-end">
           <button
             onClick={handleSaveSettings}
-            disabled={isLoading}
+            disabled={isLoading || isAppearanceLoading}
             className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors disabled:opacity-50"
           >
             {isLoading ? "Saving..." : "Save Settings"}

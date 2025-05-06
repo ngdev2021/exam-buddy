@@ -219,10 +219,49 @@ export const mockAuthService = {
         email: MOCK_USERS[userIndex].email,
         role: MOCK_USERS[userIndex].role,
         bio: MOCK_USERS[userIndex].bio,
-        createdAt: MOCK_USERS[userIndex].createdAt || new Date().toISOString()
+        createdAt: MOCK_USERS[userIndex].createdAt || new Date().toISOString(),
+        preferences: MOCK_USERS[userIndex].preferences
       };
     } catch (error) {
       throw new Error('Failed to update profile');
+    }
+  },
+  
+  // Update password
+  updatePassword: async (currentPassword, newPassword, token) => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (!token || !token.startsWith('mock_token_')) {
+      throw new Error('Unauthorized');
+    }
+    
+    try {
+      const payload = JSON.parse(atob(token.replace('mock_token_', '')));
+      
+      // Check if token is expired
+      if (payload.exp < Math.floor(Date.now() / 1000)) {
+        throw new Error('Token expired');
+      }
+      
+      // Find user in mock database
+      const userIndex = MOCK_USERS.findIndex(u => u.id === payload.sub);
+      
+      if (userIndex === -1) {
+        throw new Error('User not found');
+      }
+      
+      // Verify current password
+      if (MOCK_USERS[userIndex].password !== currentPassword) {
+        throw new Error('Current password is incorrect');
+      }
+      
+      // Update password
+      MOCK_USERS[userIndex].password = newPassword;
+      
+      return true;
+    } catch (error) {
+      throw new Error(error.message || 'Failed to update password');
     }
   }
 };
