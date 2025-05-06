@@ -7,8 +7,14 @@ import { SubjectProvider } from "./contexts/SubjectContext";
 import { QueryProvider } from "./context/QueryProvider";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AppearanceProvider } from "./context/AppearanceContext";
-import "./index.css";
+import { setupMockApiInterceptors } from "./utils/mockApiService";
 import './styles/appearance.css';
+import "./index.css";
+
+// Setup mock API interceptors if using mock authentication
+if (import.meta.env.VITE_USE_MOCK_AUTH === 'true') {
+  setupMockApiInterceptors();
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

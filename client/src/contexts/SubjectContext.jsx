@@ -16,26 +16,35 @@ export function SubjectProvider({ children }) {
   // Load user preference on login
   useEffect(() => {
     if (user && token) {
-      // Check if we're in development mode with mock auth
-      if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
+      // Check if we're using mock auth
+      if (import.meta.env.VITE_USE_MOCK_AUTH === 'true') {
         // Use user preferences from mock data if available
-        if (user.preferences && user.preferences.currentSubject) {
-          const subj = subjects.find(s => s.name === user.preferences.currentSubject);
-          if (subj) setSelectedSubject(subj);
+        if (user.preferences?.currentSubject) {
+          const savedSubject = subjects.find(s => s.name === user.preferences.currentSubject);
+          if (savedSubject) {
+            setSelectedSubject(savedSubject);
+          }
         }
       } else {
-        // Production code - fetch from API
+        // Fetch from API
         fetch(`${import.meta.env.VITE_API_URL}/api/user-preference`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}` 
+          }
         })
-          .then(res => res.ok ? res.json() : null)
-          .then(data => {
-            if (data && data.currentSubject) {
-              const subj = subjects.find(s => s.name === data.currentSubject);
-              if (subj) setSelectedSubject(subj);
+        .then(response => {
+          if (response.ok) return response.json();
+          throw new Error('Failed to fetch subject preference');
+        })
+        .then(data => {
+          if (data.currentSubject) {
+            const savedSubject = subjects.find(s => s.name === data.currentSubject);
+            if (savedSubject) {
+              setSelectedSubject(savedSubject);
             }
-          })
-          .catch(err => console.error("Failed to load subject preference:", err));
+          }
+        })
+        .catch(err => console.error("Failed to load subject preference:", err));
       }
     }
   }, [user, token]);
@@ -43,25 +52,14 @@ export function SubjectProvider({ children }) {
   // Save preference when it changes
   useEffect(() => {
     if (user && token && selectedSubject) {
-      // Check if we're in development mode with mock auth
-      if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
-        // In mock mode, we would update the user preferences in local storage
-        if (user && user.id) {
-          const storedUser = localStorage.getItem("user");
-          if (storedUser) {
-            try {
-              const userData = JSON.parse(storedUser);
-              userData.preferences = { ...userData.preferences, currentSubject: selectedSubject.name };
-              localStorage.setItem("user", JSON.stringify(userData));
-            } catch (err) {
-              console.error("Failed to update subject preference in local storage:", err);
-            }
-          }
-        }
+      // Check if we're using mock auth
+      if (import.meta.env.VITE_USE_MOCK_AUTH === 'true') {
+        // In mock mode, we don't need to save preferences
+        console.log("Mock mode: Would save subject preference:", selectedSubject.name);
       } else {
-        // Production code - save to API
+        // Save to API
         fetch(`${import.meta.env.VITE_API_URL}/api/user-preference`, {
-          method: "POST",
+          method: 'POST',
           headers: { 
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}` 

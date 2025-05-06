@@ -115,8 +115,8 @@ export function AuthProvider({ children }) {
     try {
       console.log("Attempting login for", email);
       
-      // Use mock service in development mode
-      if (import.meta.env.DEV && (import.meta.env.VITE_USE_MOCK_AUTH === 'true' || import.meta.env.VITE_API_URL === undefined)) {
+      // Use mock service if VITE_USE_MOCK_AUTH is true (in both dev and prod)
+      if (import.meta.env.VITE_USE_MOCK_AUTH === 'true') {
         console.log("Using mock authentication service");
         const data = await mockAuthService.login(email, password);
         
