@@ -4,6 +4,7 @@ import { useSubject } from "../contexts/SubjectContext";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import ErrorDisplay from "../components/ui/ErrorDisplay";
+import { useNavigate } from "react-router-dom";
 
 /**
  * @typedef {{ total: number, correct: number, incorrect: number }} TopicStats
@@ -53,6 +54,7 @@ import MobileNavBar from "../components/MobileNavBar";
 import CustomQuestionGenerator from "../components/CustomQuestionGenerator";
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedSubject } = useSubject();
   // Get topics from the selected subject
@@ -236,7 +238,12 @@ export default function DashboardPage() {
         {typeof allAnswered !== 'number' || isNaN(allAnswered) || allAnswered === 0 ? (
           <div className="card p-6 text-gray-500 dark:text-gray-400 text-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <p>No data yet. Practice or take a test to see your topic breakdown.</p>
-            <button className="btn-primary mt-4">Start Practice</button>
+            <button 
+              className="btn-primary mt-4" 
+              onClick={() => navigate('/practice')}
+            >
+              Start Practice
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
