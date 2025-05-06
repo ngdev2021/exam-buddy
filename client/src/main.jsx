@@ -8,6 +8,7 @@ import { QueryProvider } from "./context/QueryProvider";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AppearanceProvider } from "./context/AppearanceContext";
 import "./index.css";
+import './styles/appearance.css';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

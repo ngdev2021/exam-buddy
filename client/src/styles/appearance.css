@@ -1,0 +1,106 @@
+/* Appearance Settings */
+
+/* High Contrast Mode */
+.high-contrast {
+  --contrast-bg: #000000;
+  --contrast-text: #ffffff;
+  --contrast-border: #ffffff;
+  --contrast-focus: #ffff00;
+}
+
+.high-contrast.dark {
+  --contrast-bg: #000000;
+  --contrast-text: #ffffff;
+  --contrast-border: #ffffff;
+  --contrast-focus: #ffff00;
+}
+
+/* Apply high contrast background colors */
+.high-contrast .bg-white {
+  background-color: var(--contrast-bg) !important;
+}
+
+.high-contrast.dark .bg-gray-800 {
+  background-color: var(--contrast-bg) !important;
+}
+
+.high-contrast.dark .bg-gray-900 {
+  background-color: var(--contrast-bg) !important;
+}
+
+.high-contrast.dark .bg-gray-700 {
+  background-color: var(--contrast-bg) !important;
+}
+
+/* Apply high contrast text colors */
+.high-contrast .text-gray-800 {
+  color: var(--contrast-text) !important;
+}
+
+.high-contrast .text-gray-700 {
+  color: var(--contrast-text) !important;
+}
+
+.high-contrast .text-gray-600 {
+  color: var(--contrast-text) !important;
+}
+
+.high-contrast.dark .text-gray-200 {
+  color: var(--contrast-text) !important;
+}
+
+.high-contrast.dark .text-gray-300 {
+  color: var(--contrast-text) !important;
+}
+
+.high-contrast.dark .text-gray-400 {
+  color: var(--contrast-text) !important;
+}
+
+/* Apply high contrast border colors */
+.high-contrast .border {
+  border-color: var(--contrast-border) !important;
+}
+
+.high-contrast .border-gray-200 {
+  border-color: var(--contrast-border) !important;
+}
+
+.high-contrast.dark .border-gray-700 {
+  border-color: var(--contrast-border) !important;
+}
+
+.high-contrast *:focus {
+  outline: 2px solid var(--contrast-focus) !important;
+}
+
+/* Large Text Mode */
+.large-text {
+  font-size: 1.2rem;
+}
+
+.large-text h1 {
+  font-size: 2.4rem;
+}
+
+.large-text h2 {
+  font-size: 2rem;
+}
+
+.large-text h3 {
+  font-size: 1.8rem;
+}
+
+.large-text .text-sm {
+  font-size: 1.1rem;
+}
+
+.large-text .text-xs {
+  font-size: 1rem;
+}
+
+/* Reduced Motion */
+.reduce-motion * {
+  transition: none !important;
+  animation: none !important;
+}
