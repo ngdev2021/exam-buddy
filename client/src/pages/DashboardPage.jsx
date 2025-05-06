@@ -101,10 +101,16 @@ export default function DashboardPage() {
     };
   });
 
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   function handleReset() {
     if (window.confirm("Are you sure you want to reset all your progress? This cannot be undone.")) {
       try {
         resetStats();
+        // Show success message
+        setResetSuccess(true);
+        // Hide success message after 3 seconds
+        setTimeout(() => setResetSuccess(false), 3000);
       } catch (error) {
         console.error("Error resetting stats:", error);
         alert("There was an error resetting your progress. Please try again later.");
@@ -129,6 +135,16 @@ export default function DashboardPage() {
           </span>
         </button>
       </div>
+      
+      {/* Success message */}
+      {resetSuccess && (
+        <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-md flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Progress reset successfully! Your stats have been cleared.
+        </div>
+      )}
       
       {lastUpdated && (
         <div className="text-xs text-gray-500 dark:text-gray-400 mb-4 text-center sm:text-left">
