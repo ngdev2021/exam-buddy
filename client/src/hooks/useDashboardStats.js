@@ -82,6 +82,10 @@ export function useDashboardStats() {
     onSuccess: () => {
       // Invalidate and refetch the stats query
       queryClient.invalidateQueries({ queryKey: statsQueryKey });
+    },
+    onError: (error) => {
+      console.error('Error resetting stats:', error);
+      // The error will be handled by the component
     }
   });
   

@@ -103,7 +103,12 @@ export default function DashboardPage() {
 
   function handleReset() {
     if (window.confirm("Are you sure you want to reset all your progress? This cannot be undone.")) {
-      resetStats();
+      try {
+        resetStats();
+      } catch (error) {
+        console.error("Error resetting stats:", error);
+        alert("There was an error resetting your progress. Please try again later.");
+      }
     }
   }
 
