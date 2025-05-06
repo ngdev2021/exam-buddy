@@ -57,22 +57,31 @@ export default function DashboardPage() {
   const { selectedSubject } = useSubject();
   // Get topics from the selected subject
   const topics = selectedSubject.groups.flatMap(g => g.topics);
-  const { stats, isLoading, error, refetch, resetStats, isResetting } = useDashboardStats();
+  const { stats: apiStats, isLoading, error, refetch, resetStats, isResetting } = useDashboardStats();
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [resetSuccess, setResetSuccess] = useState(false);
+  // Add local stats state that we can directly manipulate
+  const [localStats, setLocalStats] = useState(apiStats);
+
+  // Update localStats when apiStats changes
+  React.useEffect(() => {
+    if (apiStats) {
+      setLocalStats(apiStats);
+    }
+  }, [apiStats]);
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading && !localStats) {
     return <LoadingSpinner fullPage text="Loading your dashboard..." />;
   }
   
   // Show error state with retry button
-  if (error) {
+  if (error && !localStats) {
     return <ErrorDisplay error={error} fullPage onRetry={refetch} />;
   }
 
   // Defensive: always treat stats as {} if null/undefined
-  const safeStats = stats && typeof stats === 'object' ? stats : {};
+  const safeStats = localStats && typeof localStats === 'object' ? localStats : {};
   const allAnswered = topics.reduce((sum, t) => sum + (safeStats[t]?.total || 0), 0);
   const allCorrect = topics.reduce((sum, t) => sum + (safeStats[t]?.correct || 0), 0);
 
@@ -105,15 +114,23 @@ export default function DashboardPage() {
   function handleReset() {
     if (window.confirm("Are you sure you want to reset all your progress? This cannot be undone.")) {
       try {
+        // Immediately clear the local stats for instant UI feedback
+        setLocalStats({});
+        
+        // Call the API reset function
         resetStats();
+        
         // Show success message
         setResetSuccess(true);
+        
         // Update the lastUpdated timestamp
         setLastUpdated(new Date());
+        
         // Force a refetch to get the latest data
         setTimeout(() => {
           refetch();
         }, 1500);
+        
         // Hide success message after 3 seconds
         setTimeout(() => setResetSuccess(false), 3000);
       } catch (error) {
