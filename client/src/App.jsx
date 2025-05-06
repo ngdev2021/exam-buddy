@@ -1,15 +1,16 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import NavigationMenu from "./components/NavigationMenu";
+import MobileNavBar from "./components/MobileNavBar";
 import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import PracticePage from "./pages/PracticePage";
 import TestPage from "./pages/TestPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { SubjectProvider } from "./contexts/SubjectContext";
-import { Outlet } from "react-router-dom";
+import CalculatorPage from "./pages/CalculatorPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./context/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 function NavBar() {
@@ -34,40 +35,54 @@ function NavBar() {
   );
 }
 
-function AppRoutes() {
-  return (
-    <>
-      <NavBar />
-      <ErrorBoundary>
-        <Routes>
-          <Route path="*" element={
-            <div className="min-h-screen bg-gray-50">
-              <main className="max-w-4xl mx-auto pt-8 pb-24 px-4">
-                <Outlet />
-              </main>
-            </div>
-          }>
-            <Route index element={<HomePage />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="practice" element={<PracticePage />} />
-            <Route path="test" element={<TestPage />} />
-            <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
-          </Route>
-          {/* Optionally, add a catch-all 404 route here */}
-        </Routes>
-      </ErrorBoundary>
-    </>
-  );
-}
+// AppRoutes component removed as it's no longer needed
 
 function App() {
   return (
-    <AuthProvider>
-      <SubjectProvider>
-        <AppRoutes />
-      </SubjectProvider>
-    </AuthProvider>
+    <div className="min-h-screen bg-gray-50">
+      <NavBar />
+      <NavigationMenu />
+      <MobileNavBar />
+      <ErrorBoundary>
+        <main className="max-w-4xl mx-auto pt-8 pb-24 px-4">
+          <Routes>
+            {/* Public routes */}
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
+            
+            {/* Protected routes */}
+            <Route index element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            } />
+            <Route path="dashboard" element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="practice" element={
+              <ProtectedRoute>
+                <PracticePage />
+              </ProtectedRoute>
+            } />
+            <Route path="test" element={
+              <ProtectedRoute>
+                <TestPage />
+              </ProtectedRoute>
+            } />
+            <Route path="calculator" element={
+              <ProtectedRoute>
+                <CalculatorPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Catch-all 404 route */}
+            <Route path="*" element={<div className="text-center py-10"><h2 className="text-2xl font-bold">Page Not Found</h2><p>The page you're looking for doesn't exist.</p></div>} />
+          </Routes>
+        </main>
+      </ErrorBoundary>
+    </div>
   );
 }
 
