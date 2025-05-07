@@ -47,13 +47,18 @@ export const ChatbotProvider = ({ children }) => {
     // Generate a unique ID for this message
     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+    // Store the topic from context to ensure consistency
+    const messageTopic = context?.topic || '';
+    console.log('Message topic:', messageTopic);
+    
     // Add user message to the chat
     const userMessage = {
       id: messageId,
       text,
       sender: 'user',
       timestamp: new Date().toISOString(),
-      context
+      context,
+      topic: messageTopic // Store the topic with the message
     };
     
     // Check if this is a duplicate message (sent within the last second)
@@ -64,10 +69,19 @@ export const ChatbotProvider = ({ children }) => {
     );
     
     if (!isDuplicate) {
-      setMessages(prev => [...prev, userMessage]);
+      // Filter out previous messages with different topics to prevent mixing
+      const relevantMessages = messages.filter(msg => 
+        !msg.topic || msg.topic === messageTopic || !messageTopic
+      );
       
-      // Update chat history
-      setChatHistory(prev => [...prev, { role: 'user', content: text, context }]);
+      setMessages([...relevantMessages, userMessage]);
+      
+      // Update chat history - only include relevant messages
+      const relevantHistory = chatHistory.filter(item => 
+        !item.context?.topic || item.context.topic === messageTopic || !messageTopic
+      );
+      
+      setChatHistory([...relevantHistory, { role: 'user', content: text, context, topic: messageTopic }]);
       
       // Show typing indicator
       setIsTyping(true);
@@ -90,7 +104,8 @@ export const ChatbotProvider = ({ children }) => {
         sender: 'ai',
         timestamp: new Date().toISOString(),
         context: userMessage.context,
-        questionId: userMessage.id // Link this response to the original question
+        questionId: userMessage.id, // Link this response to the original question
+        topic: messageTopic // Maintain topic consistency
       };
       
       // Check if this is a duplicate response
@@ -102,13 +117,17 @@ export const ChatbotProvider = ({ children }) => {
       
       if (!isDuplicateResponse) {
         console.log('Sending AI response with context:', botMessage);
-        setMessages(prev => [...prev, botMessage]);
+        // Only include messages with the same topic
+        const topicFilteredMessages = messages.filter(msg => 
+          !msg.topic || msg.topic === messageTopic || !messageTopic
+        );
+        setMessages([...topicFilteredMessages, botMessage]);
       } else {
         console.log('Prevented duplicate AI response');
       }
       
       // Update chat history
-      setChatHistory(prev => [...prev, { role: 'assistant', content: response, context: userMessage.context }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: response, context: userMessage.context, topic: messageTopic }]);
     } catch (error) {
       console.error('Error generating chatbot response:', error);
       
@@ -117,7 +136,8 @@ export const ChatbotProvider = ({ children }) => {
         id: Date.now() + 1,
         text: "I'm sorry, I'm having trouble responding right now. Please try again later.",
         sender: 'bot',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        topic: messageTopic // Maintain topic consistency
       };
       
       setMessages(prev => [...prev, errorMessage]);

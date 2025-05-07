@@ -70,6 +70,9 @@ const SubjectTutor = ({ topic }) => {
     }
   }, [user, preferences.userName, showNamePrompt]);
   
+  // Store the current topic to prevent inconsistencies
+  const [currentTopic, setCurrentTopic] = useState('');
+
   // Handle topic changes and add southern hospitality
   useEffect(() => {
     if (topic && selectedSubject) {
@@ -79,6 +82,9 @@ const SubjectTutor = ({ topic }) => {
       
       // Track this topic in visited topics
       addVisitedTopic(topic);
+      
+      // Store the current topic to maintain consistency
+      setCurrentTopic(topic);
       
       // Reset quiz state when topic changes
       setQuizAnswers({});
@@ -95,11 +101,12 @@ const SubjectTutor = ({ topic }) => {
         nameGreeting = ` ${preferences.userName},`;
       }
       
-      // Create the initial message with southern charm
+      // Create the initial message with southern charm - use consistent topic reference
       const initialMessage = {
         sender: 'tutor',
         text: `${greeting}${nameGreeting} I'm ${tutorName}, your ${selectedSubject.name} tutor. I'm just tickled pink to help you learn about ${topic}! What would you like to know, sugar?`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        topic: topic // Store the topic with the message
       };
       
       // If we don't know the user's name, add a follow-up message asking for it
@@ -108,12 +115,14 @@ const SubjectTutor = ({ topic }) => {
         const nameRequestMessage = {
           sender: 'tutor',
           text: `Before we dive in, I'd love to know your name, darlin'. It helps me make our conversations more personal!`,
-          timestamp: new Date(Date.now() + 1000).toISOString()
+          timestamp: new Date(Date.now() + 1000).toISOString(),
+          topic: topic // Store the topic with the message
         };
         messages.push(nameRequestMessage);
         setShowNamePrompt(true);
       }
       
+      // Clear previous messages to prevent topic mixing
       setTutorMessages(messages);
       setShowChat(true);
     }
@@ -209,12 +218,13 @@ const SubjectTutor = ({ topic }) => {
     // Generate a unique message ID
     const messageId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
-    // Create a new message object
+    // Create a new message object with current topic
     const newMessage = {
       id: messageId,
       text: messageInput,
       sender: 'user',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      topic: currentTopic // Use the stored current topic
     };
     
     // Add the message to our local state
@@ -226,7 +236,7 @@ const SubjectTutor = ({ topic }) => {
     // Send the message to the chatbot context with subject and topic info
     sendMessage(messageInput, {
       subject: selectedSubject.name,
-      topic: topic,
+      topic: currentTopic, // Use the stored current topic for consistency
       role: 'tutor',
       messageId: messageId,
       personality: 'southern', // Add personality hint
@@ -238,7 +248,7 @@ const SubjectTutor = ({ topic }) => {
     setTypingText('');
     
     // Log for debugging
-    console.log(`Sent message with ID: ${messageId}`);
+    console.log(`Sent message with ID: ${messageId} for topic: ${currentTopic}`);
   };
 
   // Handle quiz answer selection
@@ -386,36 +396,45 @@ const SubjectTutor = ({ topic }) => {
             ref={chatContainerRef}
             className="h-64 overflow-y-auto p-4 space-y-4 bg-white dark:bg-gray-800"
           >
-            {/* Display all completed messages */}
-            {tutorMessages.map((msg, idx) => (
-              <div 
-                key={idx} 
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.sender === 'tutor' && (
-                  <div className="flex-shrink-0 mr-2 mt-1">
-                    <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-800 flex items-center justify-center text-pink-500 dark:text-pink-300">
-                      {tutorName?.charAt(0) || 'T'}
-                    </div>
-                  </div>
-                )}
+            {/* Display only messages related to the current topic */}
+            {tutorMessages
+              .filter(msg => !msg.topic || msg.topic === currentTopic)
+              .map((msg, idx) => (
                 <div 
-                  className={`max-w-3/4 rounded-lg px-4 py-2 ${
-                    msg.sender === 'user' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                  }`}
+                  key={idx} 
+                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.sender === 'tutor' && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{tutorName}</p>
+                    <div className="flex-shrink-0 mr-2 mt-1">
+                      <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-800 flex items-center justify-center text-pink-500 dark:text-pink-300">
+                        {tutorName?.charAt(0) || 'T'}
+                      </div>
+                    </div>
                   )}
-                  <p>{msg.text}</p>
-                  {msg.sender === 'user' && preferences.userName && (
-                    <p className="text-xs text-right text-blue-300 mt-1">{preferences.userName}</p>
-                  )}
+                  <div 
+                    className={`max-w-3/4 rounded-lg px-4 py-2 ${
+                      msg.sender === 'user' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    }`}
+                  >
+                    {msg.sender === 'tutor' && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{tutorName}</p>
+                    )}
+                    <p>{msg.text}</p>
+                    {msg.sender === 'user' && preferences.userName && (
+                      <p className="text-xs text-right text-blue-300 mt-1">{preferences.userName}</p>
+                    )}
+                  </div>
                 </div>
+              ))}
+              
+            {/* Debug info - only in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-400 mt-2 p-1 border border-gray-200 rounded">
+                Current topic: {currentTopic}
               </div>
-            ))}
+            )}
             
             {/* Display typing indicator and text being typed */}
             {isTyping && (
