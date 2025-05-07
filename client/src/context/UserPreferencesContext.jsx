@@ -15,22 +15,54 @@ export function UserPreferencesProvider({ children }) {
 
   // Load preferences from localStorage when component mounts or user changes
   useEffect(() => {
+    // First try to load user-specific preferences if logged in
     if (user) {
       const storedPreferences = localStorage.getItem(`preferences_${user.id}`);
       if (storedPreferences) {
         try {
           setPreferences(JSON.parse(storedPreferences));
+          return; // If we loaded user preferences, we're done
         } catch (error) {
           console.error('Failed to parse stored preferences', error);
         }
       }
     }
+    
+    // If no user or no user preferences, try to load global preferences
+    const globalPreferences = localStorage.getItem('global_preferences');
+    if (globalPreferences) {
+      try {
+        setPreferences(JSON.parse(globalPreferences));
+      } catch (error) {
+        console.error('Failed to parse global preferences', error);
+      }
+    }
+    
+    // Also check for direct userName storage
+    const storedName = localStorage.getItem('userName');
+    if (storedName && (!preferences.userName || preferences.userName !== storedName)) {
+      setPreferences(prev => ({
+        ...prev,
+        userName: storedName
+      }));
+    }
   }, [user]);
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {
-    if (user && preferences) {
+    if (!preferences) return;
+    
+    // Save to user-specific storage if logged in
+    if (user) {
       localStorage.setItem(`preferences_${user.id}`, JSON.stringify(preferences));
+    }
+    
+    // Always save to global storage for non-authenticated access
+    localStorage.setItem('global_preferences', JSON.stringify(preferences));
+    
+    // Also save userName directly for easier access
+    if (preferences.userName) {
+      localStorage.setItem('userName', preferences.userName);
     }
   }, [preferences, user]);
 

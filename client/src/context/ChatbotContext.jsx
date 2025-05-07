@@ -77,6 +77,26 @@ export const ChatbotProvider = ({ children }) => {
   
   // Function to send a message to the chatbot
   const sendMessage = async (text, context = null) => {
+    // Handle clear chat request
+    if (context?.isSystemMessage && context?.isClearChat) {
+      console.log('Clearing chat history');
+      setMessages([]);
+      setChatHistory([]);
+      setProcessedMessageIds(new Set());
+      
+      // Add a system message indicating the chat was cleared
+      const clearMessage = {
+        id: `system_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        text: 'Chat history has been cleared.',
+        sender: 'system',
+        timestamp: new Date().toISOString(),
+        isSystemMessage: true
+      };
+      
+      setMessages([clearMessage]);
+      return;
+    }
+    
     // Handle system messages (like greetings) differently
     if (context?.isSystemMessage) {
       const systemMessage = {

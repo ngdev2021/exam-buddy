@@ -49,11 +49,20 @@ const GlobalTutor = () => {
     console.log('GlobalTutor mounted', { user, preferences, showNamePrompt, hasGreetedUser });
     
     // Show name prompt if user is logged in but hasn't provided a name yet
-    if (user && preferences && !preferences.userName && !showNamePrompt && !hasGreetedUser) {
+    if (!preferences?.userName && !showNamePrompt && !hasGreetedUser) {
       console.log('Showing name prompt');
       setShowNamePrompt(true);
     }
-  }, [user, preferences, showNamePrompt, hasGreetedUser]);
+    
+    // Check if we have a name in localStorage even if not in preferences
+    if (!preferences?.userName) {
+      const storedName = localStorage.getItem('userName');
+      if (storedName) {
+        console.log('Found name in localStorage:', storedName);
+        setUserName(storedName);
+      }
+    }
+  }, [preferences, showNamePrompt, hasGreetedUser, setUserName]);
   
   // Scroll to bottom of chat when new messages arrive
   useEffect(() => {
@@ -118,6 +127,9 @@ const GlobalTutor = () => {
     // Save the user's name in preferences
     setUserName(nameInput.trim());
     
+    // Also save directly to localStorage for persistence
+    localStorage.setItem('userName', nameInput.trim());
+    
     // Send a greeting message
     const greeting = getSouthernGreeting();
     
@@ -133,6 +145,7 @@ const GlobalTutor = () => {
     setShowNamePrompt(false);
     setNameInput('');
     setHasGreetedUser(true);
+    localStorage.setItem('hasGreetedUser', 'true');
   };
   
   // Handle sending a message
@@ -208,9 +221,29 @@ const GlobalTutor = () => {
               <FaHeart className="text-pink-300 mr-2" />
               <span>Chat with {tutorName}</span>
             </div>
-            <button onClick={toggleChat} className="text-white hover:text-gray-200">
-              <FiX size={20} />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear all chat history?')) {
+                    // Clear chat history using the ChatbotContext
+                    sendMessage('', {
+                      isSystemMessage: true,
+                      isClearChat: true
+                    });
+                    // Also clear localStorage chat data
+                    localStorage.removeItem('chatMessages');
+                    localStorage.removeItem('chatHistory');
+                    localStorage.removeItem('processedMessageIds');
+                  }
+                }} 
+                className="text-white hover:text-gray-200 text-xs bg-red-500 hover:bg-red-600 px-2 py-1 rounded"
+              >
+                Clear Chat
+              </button>
+              <button onClick={toggleChat} className="text-white hover:text-gray-200 ml-2">
+                <FiX size={20} />
+              </button>
+            </div>
           </div>
           
           {/* Chat messages */}
