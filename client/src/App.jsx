@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import NavigationMenu from "./components/NavigationMenu";
 import MobileNavBar from "./components/MobileNavBar";
 import VoiceCommandHandler from "./components/voice/VoiceCommandHandler";
-import Chatbot from "./components/chatbot/Chatbot";
+import GlobalTutor from "./components/chatbot/GlobalTutor";
 import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import PracticePage from "./pages/PracticePage";
@@ -38,7 +38,7 @@ function App() {
           <MobileNavBar />
           <ErrorBoundary>
             {isAuthenticated && <VoiceCommandHandler />}
-            {isAuthenticated && <Chatbot />}
+            {isAuthenticated && <GlobalTutor />}
             <main className="max-w-4xl mx-auto pt-16 pb-24 px-4 md:pt-8">
           <Routes>
             {/* Public routes */}

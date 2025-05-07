@@ -9,22 +9,57 @@ export const useChatbot = () => useContext(ChatbotContext);
 
 // Chatbot provider component
 export const ChatbotProvider = ({ children }) => {
-  // State for chat messages
-  const [messages, setMessages] = useState([]);
+  // State for chat messages - use localStorage to persist messages
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = localStorage.getItem('chatMessages');
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  });
   const [isTyping, setIsTyping] = useState(false);
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatHistory, setChatHistory] = useState(() => {
+    const savedHistory = localStorage.getItem('chatHistory');
+    return savedHistory ? JSON.parse(savedHistory) : [];
+  });
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [processedMessageIds, setProcessedMessageIds] = useState(() => {
+    const savedIds = localStorage.getItem('processedMessageIds');
+    return savedIds ? new Set(JSON.parse(savedIds)) : new Set();
+  });
   
   // Clear chat history
   const clearChat = () => {
     setMessages([]);
     setChatHistory([]);
+    setProcessedMessageIds(new Set());
+    localStorage.removeItem('chatMessages');
+    localStorage.removeItem('chatHistory');
+    localStorage.removeItem('processedMessageIds');
   };
   
   // Toggle chat panel
   const toggleChat = () => {
     setIsChatOpen(prev => !prev);
   };
+  
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
+  }, [messages]);
+  
+  // Save chat history to localStorage whenever it changes
+  useEffect(() => {
+    if (chatHistory.length > 0) {
+      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+  }, [chatHistory]);
+  
+  // Save processed message IDs to localStorage whenever they change
+  useEffect(() => {
+    if (processedMessageIds.size > 0) {
+      localStorage.setItem('processedMessageIds', JSON.stringify([...processedMessageIds]));
+    }
+  }, [processedMessageIds]);
   
   // Add a welcome message when the component mounts
   useEffect(() => {
@@ -42,13 +77,34 @@ export const ChatbotProvider = ({ children }) => {
   
   // Function to send a message to the chatbot
   const sendMessage = async (text, context = null) => {
-    if (!text.trim()) return;
+    // Handle system messages (like greetings) differently
+    if (context?.isSystemMessage) {
+      const systemMessage = {
+        id: `system_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        text: context.text || '',
+        sender: context.sender || 'system',
+        timestamp: new Date().toISOString(),
+        isSystemMessage: true
+      };
+      
+      setMessages(prev => [...prev, systemMessage]);
+      return;
+    }
+    
+    // For regular user messages, require text
+    if (!text.trim() && !context?.isSystemMessage) return;
     
     // Generate a unique ID for this message
     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+    // Check if we've already processed this message ID
+    if (processedMessageIds.has(messageId)) {
+      console.log('Message already processed:', messageId);
+      return;
+    }
+    
     // Store the topic from context to ensure consistency
-    const messageTopic = context?.topic || '';
+    const messageTopic = context?.topic || 'General';
     console.log('Message topic:', messageTopic);
     
     // Add user message to the chat
@@ -69,19 +125,14 @@ export const ChatbotProvider = ({ children }) => {
     );
     
     if (!isDuplicate) {
-      // Filter out previous messages with different topics to prevent mixing
-      const relevantMessages = messages.filter(msg => 
-        !msg.topic || msg.topic === messageTopic || !messageTopic
-      );
+      // Add to processed message IDs
+      setProcessedMessageIds(prev => new Set([...prev, messageId]));
       
-      setMessages([...relevantMessages, userMessage]);
+      // For the global chat, we don't filter by topic anymore
+      setMessages(prev => [...prev, userMessage]);
       
-      // Update chat history - only include relevant messages
-      const relevantHistory = chatHistory.filter(item => 
-        !item.context?.topic || item.context.topic === messageTopic || !messageTopic
-      );
-      
-      setChatHistory([...relevantHistory, { role: 'user', content: text, context, topic: messageTopic }]);
+      // Update chat history
+      setChatHistory(prev => [...prev, { role: 'user', content: text, context, topic: messageTopic }]);
       
       // Show typing indicator
       setIsTyping(true);
@@ -117,11 +168,11 @@ export const ChatbotProvider = ({ children }) => {
       
       if (!isDuplicateResponse) {
         console.log('Sending AI response with context:', botMessage);
-        // Only include messages with the same topic
-        const topicFilteredMessages = messages.filter(msg => 
-          !msg.topic || msg.topic === messageTopic || !messageTopic
-        );
-        setMessages([...topicFilteredMessages, botMessage]);
+        // Add to processed message IDs
+        setProcessedMessageIds(prev => new Set([...prev, responseId]));
+        
+        // For the global chat, we don't filter by topic anymore
+        setMessages(prev => [...prev, botMessage]);
       } else {
         console.log('Prevented duplicate AI response');
       }

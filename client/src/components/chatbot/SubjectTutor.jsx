@@ -73,7 +73,7 @@ const SubjectTutor = ({ topic }) => {
   // Store the current topic to prevent inconsistencies
   const [currentTopic, setCurrentTopic] = useState('');
 
-  // Handle topic changes and add southern hospitality
+  // Handle topic changes without adding chat messages (now handled by GlobalTutor)
   useEffect(() => {
     if (topic && selectedSubject) {
       // Get lesson content based on the selected subject and topic
@@ -92,39 +92,17 @@ const SubjectTutor = ({ topic }) => {
       setQuizScore(0);
       setActiveSection(0);
       
-      // Add initial tutor message with southern hospitality
-      let greeting = getSouthernGreeting();
-      let nameGreeting = '';
-      
-      // Add personalized greeting if we know the user's name
-      if (preferences.userName) {
-        nameGreeting = ` ${preferences.userName},`;
-      }
-      
-      // Create the initial message with southern charm - use consistent topic reference
-      const initialMessage = {
-        sender: 'tutor',
-        text: `${greeting}${nameGreeting} I'm ${tutorName}, your ${selectedSubject.name} tutor. I'm just tickled pink to help you learn about ${topic}! What would you like to know, sugar?`,
+      // Send a topic change notification to the global tutor via the ChatbotContext
+      // This will be handled by the GlobalTutor component
+      sendMessage('', {
+        isSystemMessage: true,
+        text: `I'm now studying ${topic} in ${selectedSubject.name}.`,
+        sender: 'system',
         timestamp: new Date().toISOString(),
-        topic: topic // Store the topic with the message
-      };
-      
-      // If we don't know the user's name, add a follow-up message asking for it
-      const messages = [initialMessage];
-      if (!preferences.userName && !showNamePrompt) {
-        const nameRequestMessage = {
-          sender: 'tutor',
-          text: `Before we dive in, I'd love to know your name, darlin'. It helps me make our conversations more personal!`,
-          timestamp: new Date(Date.now() + 1000).toISOString(),
-          topic: topic // Store the topic with the message
-        };
-        messages.push(nameRequestMessage);
-        setShowNamePrompt(true);
-      }
-      
-      // Clear previous messages to prevent topic mixing
-      setTutorMessages(messages);
-      setShowChat(true);
+        topic: topic,
+        subject: selectedSubject.name,
+        isTopicChange: true
+      });
     }
   }, [topic, selectedSubject, preferences.userName, tutorName, getSouthernGreeting, addVisitedTopic]);
 
@@ -339,12 +317,9 @@ const SubjectTutor = ({ topic }) => {
       
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">{lesson.title}</h2>
-        <button 
-          onClick={() => setShowChat(!showChat)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-        >
-          {showChat ? 'Hide Chat' : 'Ask Tutor'}
-        </button>
+        <div className="text-sm text-gray-600 dark:text-gray-300 italic">
+          Use the chat button in the bottom right corner to ask questions about this topic
+        </div>
       </div>
       
       <div className="lesson-content">
@@ -384,93 +359,7 @@ const SubjectTutor = ({ topic }) => {
         </div>
       </div>
 
-      {/* Chat interface with southern charm */}
-      {showChat && (
-        <div className="mt-6 border rounded-lg overflow-hidden">
-          <div className="bg-gray-100 dark:bg-gray-700 px-4 py-2 font-medium border-b flex items-center">
-            <FaHeart className="text-pink-500 mr-2" />
-            Chat with {tutorName} - Your {selectedSubject.name} Tutor
-          </div>
-          
-          <div 
-            ref={chatContainerRef}
-            className="h-64 overflow-y-auto p-4 space-y-4 bg-white dark:bg-gray-800"
-          >
-            {/* Display only messages related to the current topic */}
-            {tutorMessages
-              .filter(msg => !msg.topic || msg.topic === currentTopic)
-              .map((msg, idx) => (
-                <div 
-                  key={idx} 
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {msg.sender === 'tutor' && (
-                    <div className="flex-shrink-0 mr-2 mt-1">
-                      <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-800 flex items-center justify-center text-pink-500 dark:text-pink-300">
-                        {tutorName?.charAt(0) || 'T'}
-                      </div>
-                    </div>
-                  )}
-                  <div 
-                    className={`max-w-3/4 rounded-lg px-4 py-2 ${
-                      msg.sender === 'user' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                    }`}
-                  >
-                    {msg.sender === 'tutor' && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{tutorName}</p>
-                    )}
-                    <p>{msg.text}</p>
-                    {msg.sender === 'user' && preferences.userName && (
-                      <p className="text-xs text-right text-blue-300 mt-1">{preferences.userName}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-            {/* Debug info - only in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-gray-400 mt-2 p-1 border border-gray-200 rounded">
-                Current topic: {currentTopic}
-              </div>
-            )}
-            
-            {/* Display typing indicator and text being typed */}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="max-w-3/4 rounded-lg px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                  {typingText.length === 0 ? (
-                    <div className="flex items-center">
-                      <span className="text-sm italic mr-2">Typing</span>
-                      <BsThreeDots className="animate-pulse" />
-                    </div>
-                  ) : (
-                    <p>{typingText}</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="border-t p-2 flex">
-            <input
-              type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Ask a question about this topic..."
-              className="flex-grow px-3 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-            <button
-              onClick={handleSendMessage}
-              className="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-            >
-              <FiSend />
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Removed chat interface - now using global tutor */}
     </div>
   );
 };
