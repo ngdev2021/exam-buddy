@@ -295,40 +295,79 @@ const SubjectTutor = ({ topic }) => {
         </div>
       ) : (
         /* Quiz section */
-        <div>
-          <h3 className="text-xl font-semibold mb-4">Knowledge Check</h3>
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-6">Knowledge Check</h2>
           
           {!quizSubmitted ? (
-            <>
-              {(lesson.quiz.questions || []).map((question, index) => (
-                <div key={index} className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <p className="font-medium mb-3">{index + 1}. {question.text}</p>
-                  <div className="space-y-2">
-                    {question.options.map((option, optionIndex) => (
-                      <div key={optionIndex} className="flex items-center">
-                        <input
-                          type="radio"
-                          id={`q${index}-${optionIndex}`}
-                          name={`question-${index}`}
-                          className="mr-2"
-                          checked={quizAnswers[index] === optionIndex}
-                          onChange={() => handleQuizAnswer(index, optionIndex)}
-                        />
-                        <label htmlFor={`q${index}-${optionIndex}`}>{option}</label>
+            <div>
+              <p className="mb-4">Let's test your understanding of {topic} with a quick quiz.</p>
+              
+              {lesson.quiz && lesson.quiz.length > 0 ? (
+                <div className="space-y-6">
+                  {lesson.quiz.map((question, qIndex) => (
+                    <div key={qIndex} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      <p className="font-medium mb-3">{qIndex + 1}. {question.question || question.text}</p>
+                      
+                      <div className="space-y-2">
+                        {question.options.map((option, oIndex) => (
+                          <label key={oIndex} className="flex items-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 rounded-md transition-colors">
+                            <input
+                              type="radio"
+                              name={`question-${qIndex}`}
+                              value={oIndex}
+                              checked={quizAnswers[qIndex] === oIndex}
+                              onChange={() => handleQuizAnswer(qIndex, oIndex)}
+                              className="mt-1 mr-2"
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                  
+                  <button
+                    onClick={handleQuizSubmit}
+                    disabled={Object.keys(quizAnswers).length === 0}
+                    className={`mt-4 px-6 py-2 rounded-md transition-colors ${Object.keys(quizAnswers).length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                  >
+                    Submit Answers
+                  </button>
+                  <p className="text-sm text-gray-500 mt-2">{Object.keys(quizAnswers).length === 0 ? 'Please answer at least one question to submit' : `${Object.keys(quizAnswers).length} of ${lesson.quiz.length} questions answered`}</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="mb-4">No predefined quiz available for this topic. Here's a general knowledge check:</p>
+                  <div className="space-y-6">
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      <p className="font-medium mb-3">1. Which of the following is most important when studying {topic}?</p>
+                      <div className="space-y-2">
+                        {['Understanding core concepts', 'Memorizing definitions', 'Practicing with examples', 'All of the above'].map((option, oIndex) => (
+                          <label key={oIndex} className="flex items-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 rounded-md transition-colors">
+                            <input
+                              type="radio"
+                              name="question-0"
+                              value={oIndex}
+                              checked={quizAnswers[0] === oIndex}
+                              onChange={() => handleQuizAnswer(0, oIndex)}
+                              className="mt-1 mr-2"
+                            />
+                            <span>{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleQuizSubmit}
+                      disabled={Object.keys(quizAnswers).length === 0}
+                      className={`mt-4 px-6 py-2 rounded-md transition-colors ${Object.keys(quizAnswers).length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    >
+                      Submit Answer
+                    </button>
                   </div>
                 </div>
-              ))}
-              
-              <button
-                className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-                onClick={handleQuizSubmit}
-                disabled={Object.keys(quizAnswers).length < (lesson.quiz.questions || []).length}
-              >
-                Submit Answers
-              </button>
-            </>
+              )}
+            </div>
           ) : (
             <div>
               <div className={`p-4 rounded-lg mb-6 ${

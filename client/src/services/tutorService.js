@@ -47,25 +47,48 @@ export const getTopicsForSubject = (subjectName) => {
  * @returns {Object|null} Lesson content or null if not found
  */
 export const getLessonContent = (topic, subjectName = null) => {
+  if (!topic) return null;
+  
   // Normalize inputs for comparison
   const normalizedTopic = topic.toLowerCase().trim();
   
-  // Try to find the lesson in our content database
-  const lessonContent = tutorContent[normalizedTopic] || findSimilarTopic(normalizedTopic);
+  // First try exact match
+  if (tutorContent[normalizedTopic]) {
+    return tutorContent[normalizedTopic];
+  }
   
-  if (lessonContent) {
-    // If subject is specified, make sure this lesson belongs to that subject
-    if (subjectName) {
-      const subjectTopics = getTopicsForSubject(subjectName);
-      const matchesTopic = subjectTopics.some(t => 
-        t.toLowerCase().includes(normalizedTopic) || 
-        normalizedTopic.includes(t.toLowerCase())
-      );
-      
-      if (!matchesTopic) return null;
-    }
-    
-    return lessonContent;
+  // Then try case-insensitive key matching
+  const topicKey = Object.keys(tutorContent).find(key => 
+    key.toLowerCase() === normalizedTopic
+  );
+  
+  if (topicKey) {
+    return tutorContent[topicKey];
+  }
+  
+  // Try to find a similar topic
+  const similarTopic = findSimilarTopic(normalizedTopic);
+  if (similarTopic) {
+    return similarTopic;
+  }
+  
+  // If no match found, generate a default lesson structure
+  if (normalizedTopic.length > 0) {
+    return {
+      title: topic.charAt(0).toUpperCase() + topic.slice(1),
+      description: `Learn about ${topic} and its importance in ${subjectName || 'this field'}.`,
+      subject: subjectName || 'General Knowledge',
+      sections: [
+        {
+          title: `Introduction to ${topic}`,
+          content: `${topic} is an important concept to understand. This lesson will cover the key principles and applications of ${topic}.`
+        },
+        {
+          title: `Key Concepts in ${topic}`,
+          content: `When studying ${topic}, focus on understanding the fundamental principles and how they apply in different scenarios.`
+        }
+      ]
+    };
   }
   
   return null;
@@ -101,6 +124,10 @@ const findSimilarTopic = (topic) => {
  * @returns {Array} Array of quiz questions
  */
 export const generateQuizForTopic = (topic, questionCount = 5) => {
+  if (!topic) {
+    return generateGenericQuiz('general knowledge', questionCount);
+  }
+  
   const lesson = getLessonContent(topic);
   if (!lesson || !lesson.quiz || lesson.quiz.length === 0) {
     return generateGenericQuiz(topic, questionCount);
@@ -587,14 +614,62 @@ export const getLesson = (subjectName, topic) => {
  * Get quiz for a specific topic - alias for generateQuizForTopic for compatibility
  * @param {string} subjectName - Name of the subject
  * @param {string} topic - The topic to get quiz for
- * @returns {Object|null} Quiz content or null if not found
+ * @returns {Object} Quiz content with questions array
  */
 export const getQuizForTopic = (subjectName, topic) => {
+  if (!topic || topic.trim() === '') {
+    // Generate a default quiz for the subject area
+    const defaultQuestions = [
+      {
+        question: `Which of the following is most important to understand in ${subjectName || 'this field'}?`,
+        options: [
+          'Theoretical concepts',
+          'Practical applications',
+          'Historical development',
+          'All of the above'
+        ],
+        answer: 3,
+        explanation: 'A comprehensive understanding requires knowledge of theory, application, and historical context.'
+      },
+      {
+        question: `What is the best approach to studying ${subjectName || 'this subject'}?`,
+        options: [
+          'Memorizing key terms',
+          'Understanding core concepts',
+          'Practicing with examples',
+          'Using a combination of methods'
+        ],
+        answer: 3,
+        explanation: 'Effective learning combines memorization, conceptual understanding, and practical application.'
+      },
+      {
+        question: 'Which study technique is most effective for long-term retention?',
+        options: [
+          'Cramming before the exam',
+          'Highlighting text in books',
+          'Spaced repetition and active recall',
+          'Passive reading'
+        ],
+        answer: 2,
+        explanation: 'Research shows that spaced repetition and active recall significantly improve long-term retention.'
+      }
+    ];
+    
+    return {
+      questions: defaultQuestions.map(q => ({
+        text: q.question,
+        options: q.options,
+        correctAnswer: q.answer,
+        explanation: q.explanation
+      }))
+    };
+  }
+  
   // First try to get the lesson which includes the quiz
   const lesson = getLesson(subjectName, topic);
   
   // If the lesson has a quiz, return it
-  if (lesson && lesson.quiz) {
+  if (lesson && lesson.quiz && lesson.quiz.length > 0) {
     return {
       questions: lesson.quiz.map(q => ({
         text: q.question || q.text, // Handle both formats
@@ -606,13 +681,13 @@ export const getQuizForTopic = (subjectName, topic) => {
   }
   
   // Otherwise generate a generic quiz
-  const genericQuestions = generateGenericQuiz(topic, 5);
+  const genericQuestions = generateGenericQuiz(topic || subjectName, 5);
   return {
     questions: genericQuestions.map(q => ({
-      text: q.question,
-      options: q.options,
-      correctAnswer: q.answer,
-      explanation: null
+      text: q.question || `Question about ${topic}`,
+      options: q.options || ['Option A', 'Option B', 'Option C', 'Option D'],
+      correctAnswer: q.answer || 0,
+      explanation: q.explanation || `This question tests your knowledge of ${topic}.`
     }))
   };
 };
