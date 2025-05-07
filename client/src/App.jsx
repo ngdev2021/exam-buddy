@@ -23,6 +23,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useAuth } from "./context/AuthContext";
 import { ChatbotProvider } from "./context/ChatbotContext";
+import { UserPreferencesProvider } from "./context/UserPreferencesContext";
 
 // Navigation is now handled by NavigationMenu and MobileNavBar components
 
@@ -31,13 +32,14 @@ function App() {
   
   return (
     <ChatbotProvider>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-        <NavigationMenu />
-        <MobileNavBar />
-        <ErrorBoundary>
-          {isAuthenticated && <VoiceCommandHandler />}
-          {isAuthenticated && <Chatbot />}
-          <main className="max-w-4xl mx-auto pt-16 pb-24 px-4 md:pt-8">
+      <UserPreferencesProvider>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+          <NavigationMenu />
+          <MobileNavBar />
+          <ErrorBoundary>
+            {isAuthenticated && <VoiceCommandHandler />}
+            {isAuthenticated && <Chatbot />}
+            <main className="max-w-4xl mx-auto pt-16 pb-24 px-4 md:pt-8">
           <Routes>
             {/* Public routes */}
             <Route path="login" element={<LoginPage />} />
@@ -114,8 +116,9 @@ function App() {
             <Route path="*" element={<div className="text-center py-10"><h2 className="text-2xl font-bold">Page Not Found</h2><p>The page you're looking for doesn't exist.</p></div>} />
           </Routes>
         </main>
-        </ErrorBoundary>
-      </div>
+          </ErrorBoundary>
+        </div>
+      </UserPreferencesProvider>
     </ChatbotProvider>
   );
 }
