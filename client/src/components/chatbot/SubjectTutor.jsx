@@ -240,100 +240,24 @@ const SubjectTutor = ({ topic }) => {
     // Log for debugging
     console.log(`Sent message with ID: ${messageId}`);
   };
-  
-  // Scroll to bottom of chat when new messages arrive
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [tutorMessages]);
-  
-  // Keep track of processed message IDs to prevent duplicates
-  const [processedMessageIds, setProcessedMessageIds] = useState(new Set());
-  
-  // Listen for new messages from the chatbot context
-  useEffect(() => {
-    if (messages && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      
-      // Check if this message has already been processed
-      if (lastMessage.id && !processedMessageIds.has(lastMessage.id)) {
-        // Only add AI responses that match our topic and role
-        if (lastMessage.sender === 'ai' && 
-            lastMessage.context && 
-            lastMessage.context.topic === topic &&
-            lastMessage.context.role === 'tutor') {
-          
-          console.log('Adding tutor response:', lastMessage);
-          
-          // Mark this message as processed
-          setProcessedMessageIds(prev => new Set([...prev, lastMessage.id]));
-          
-          // Start the typing effect instead of immediately adding the message
-          setIsTyping(true);
-          setFullResponse(lastMessage.text);
-          setTypingText('');
-        }
-      }
-    }
-  }, [messages, processedMessageIds, topic]);
-  
-  // Handle the typing effect
-  useEffect(() => {
-    if (isTyping && fullResponse) {
-      if (typingText.length < fullResponse.length) {
-        // Clear any existing timer
-        if (typingTimerRef.current) {
-          clearTimeout(typingTimerRef.current);
-        }
-        
-        // Set a random typing speed for a more natural feel
-        const randomDelay = Math.floor(Math.random() * 
-          (typingSpeed.max - typingSpeed.min + 1)) + typingSpeed.min;
-        
-        // Add the next character after a delay
-        typingTimerRef.current = setTimeout(() => {
-          setTypingText(fullResponse.substring(0, typingText.length + 1));
-        }, randomDelay);
-      } else {
-        // Typing is complete
-        setIsTyping(false);
-        
-        // Add the completed message to the conversation
-        setTutorMessages(prev => [...prev, {
-          sender: 'tutor',
-          text: fullResponse,
-          timestamp: new Date().toISOString()
-        }]);
-        
-        // Reset for next message
-        setFullResponse('');
-        setTypingText('');
-      }
-    }
-    
-    // Clean up timer on unmount or when dependencies change
-    return () => {
-      if (typingTimerRef.current) {
-        clearTimeout(typingTimerRef.current);
-      }
-    };
-  }, [isTyping, fullResponse, typingText, typingSpeed]);
 
+  // Handle quiz answer selection
   const handleQuizAnswer = (questionId, answer) => {
     setQuizAnswers(prev => ({
       ...prev,
       [questionId]: answer
     }));
   };
-
+  
+  // Handle quiz submission
   const handleQuizSubmit = () => {
-    if (!lesson || !lesson.quiz) return;
+    if (Object.keys(quizAnswers).length === 0) return;
     
-    // Calculate score
+    // Get the quiz questions
+    const questions = lesson.quiz || [];
+    
+    // Calculate the score
     let correctAnswers = 0;
-    const questions = lesson.quiz.questions || [];
-    
     questions.forEach((question, index) => {
       if (quizAnswers[index] === question.correctAnswer) {
         correctAnswers++;
@@ -402,6 +326,7 @@ const SubjectTutor = ({ topic }) => {
           </div>
         </div>
       )}
+      
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">{lesson.title}</h2>
         <button 
@@ -448,142 +373,7 @@ const SubjectTutor = ({ topic }) => {
           </button>
         </div>
       </div>
-      ) : (
-        /* Quiz section */
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-6">Knowledge Check</h2>
-          
-          {!quizSubmitted ? (
-            <div>
-              <p className="mb-4">Let's test your understanding of {topic} with a quick quiz.</p>
-              
-              {lesson.quiz && lesson.quiz.length > 0 ? (
-                <div className="space-y-6">
-                  {lesson.quiz.map((question, qIndex) => (
-                    <div key={qIndex} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
-                      <p className="font-medium mb-3">{qIndex + 1}. {question.question || question.text}</p>
-                      
-                      <div className="space-y-2">
-                        {question.options.map((option, oIndex) => (
-                          <label key={oIndex} className="flex items-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 rounded-md transition-colors">
-                            <input
-                              type="radio"
-                              name={`question-${qIndex}`}
-                              value={oIndex}
-                              checked={quizAnswers[qIndex] === oIndex}
-                              onChange={() => handleQuizAnswer(qIndex, oIndex)}
-                              className="mt-1 mr-2"
-                            />
-                            <span>{option}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  <button
-                    onClick={handleQuizSubmit}
-                    disabled={Object.keys(quizAnswers).length === 0}
-                    className={`mt-4 px-6 py-2 rounded-md transition-colors ${Object.keys(quizAnswers).length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                  >
-                    Submit Answers
-                  </button>
-                  <p className="text-sm text-gray-500 mt-2">{Object.keys(quizAnswers).length === 0 ? 'Please answer at least one question to submit' : `${Object.keys(quizAnswers).length} of ${lesson.quiz.length} questions answered`}</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="mb-4">No predefined quiz available for this topic. Here's a general knowledge check:</p>
-                  <div className="space-y-6">
-                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
-                      <p className="font-medium mb-3">1. Which of the following is most important when studying {topic}?</p>
-                      <div className="space-y-2">
-                        {['Understanding core concepts', 'Memorizing definitions', 'Practicing with examples', 'All of the above'].map((option, oIndex) => (
-                          <label key={oIndex} className="flex items-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 p-2 rounded-md transition-colors">
-                            <input
-                              type="radio"
-                              name="question-0"
-                              value={oIndex}
-                              checked={quizAnswers[0] === oIndex}
-                              onChange={() => handleQuizAnswer(0, oIndex)}
-                              className="mt-1 mr-2"
-                            />
-                            <span>{option}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleQuizSubmit}
-                      disabled={Object.keys(quizAnswers).length === 0}
-                      className={`mt-4 px-6 py-2 rounded-md transition-colors ${Object.keys(quizAnswers).length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                    >
-                      Submit Answer
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div>
-              <div className={`p-4 rounded-lg mb-6 ${
-                quizScore >= 70 ? 'bg-green-100 dark:bg-green-800' : 'bg-red-100 dark:bg-red-800'
-              }`}>
-                <h4 className="font-semibold text-lg mb-2">Your Score: {quizScore}%</h4>
-                <p>{quizScore >= 70 
-                  ? 'Great job! You have a good understanding of this topic.' 
-                  : 'You might need to review this topic again to improve your understanding.'}</p>
-              </div>
-              
-              {/* Show correct/incorrect answers */}
-              <h4 className="font-semibold mb-3">Review:</h4>
-              {(lesson.quiz.questions || []).map((question, index) => {
-                const isCorrect = quizAnswers[index] === question.correctAnswer;
-                return (
-                  <div 
-                    key={index} 
-                    className={`mb-4 p-3 rounded-lg ${
-                      isCorrect ? 'bg-green-50 dark:bg-green-900' : 'bg-red-50 dark:bg-red-900'
-                    }`}
-                  >
-                    <p className="font-medium">{index + 1}. {question.text}</p>
-                    <p className="mt-2">
-                      <span className="font-medium">Your answer:</span> {question.options[quizAnswers[index]]}
-                      {!isCorrect && (
-                        <span className="block mt-1">
-                          <span className="font-medium">Correct answer:</span> {question.options[question.correctAnswer]}
-                        </span>
-                      )}
-                    </p>
-                    {question.explanation && (
-                      <p className="mt-2 text-sm italic">{question.explanation}</p>
-                    )}
-                  </div>
-                );
-              })}
-              
-              <div className="flex justify-between mt-6">
-                <button
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
-                  onClick={() => setActiveSection(lesson.sections.length - 1)}
-                >
-                  Back to Content
-                </button>
-                <button
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  onClick={() => {
-                    setQuizAnswers({});
-                    setQuizSubmitted(false);
-                    setQuizScore(0);
-                  }}
-                >
-                  Retake Quiz
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      
+
       {/* Chat interface with southern charm */}
       {showChat && (
         <div className="mt-6 border rounded-lg overflow-hidden">
