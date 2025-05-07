@@ -41,14 +41,19 @@ const GlobalTutor = () => {
     return tutorNames[subjectName] || 'Miss Sally';
   };
   
-  const tutorName = preferences.tutorName || getTutorNameForSubject(selectedSubject?.name);
+  const tutorName = preferences?.tutorName || getTutorNameForSubject(selectedSubject?.name);
   
   // Check if we should show the name prompt
   useEffect(() => {
-    if (user && !preferences.userName && !showNamePrompt && !hasGreetedUser) {
+    // For debugging
+    console.log('GlobalTutor mounted', { user, preferences, showNamePrompt, hasGreetedUser });
+    
+    // Show name prompt if user is logged in but hasn't provided a name yet
+    if (user && preferences && !preferences.userName && !showNamePrompt && !hasGreetedUser) {
+      console.log('Showing name prompt');
       setShowNamePrompt(true);
     }
-  }, [user, preferences.userName, showNamePrompt, hasGreetedUser]);
+  }, [user, preferences, showNamePrompt, hasGreetedUser]);
   
   // Scroll to bottom of chat when new messages arrive
   useEffect(() => {
@@ -59,10 +64,14 @@ const GlobalTutor = () => {
   
   // Listen for topic changes and system messages
   useEffect(() => {
+    if (!messages || messages.length === 0) return;
+    
     const lastMessage = messages[messages.length - 1];
     
     // Handle topic change notifications from SubjectTutor
     if (lastMessage && lastMessage.isSystemMessage && lastMessage.isTopicChange) {
+      console.log('Topic change detected:', lastMessage);
+      
       // Update the chat with a tutor message about the new topic
       const topicMessage = `I see you're now studying ${lastMessage.topic} in ${lastMessage.subject}. That's a great topic! Feel free to ask me any questions about it, sugar.`;
       
@@ -80,30 +89,31 @@ const GlobalTutor = () => {
   
   // Send initial greeting when the component first mounts
   useEffect(() => {
-    if (firstRender.current && !hasGreetedUser) {
+    if (firstRender.current && !hasGreetedUser && preferences?.userName) {
+      console.log('Sending initial greeting');
       firstRender.current = false;
       
       // Only send a greeting if the user has already provided their name
-      if (preferences.userName) {
-        const greeting = getSouthernGreeting();
-        const subjectInfo = selectedSubject ? ` I see you're studying ${selectedSubject.name}.` : '';
-        
-        // Send an initial greeting
-        sendMessage('', {
-          isSystemMessage: true,
-          text: `${greeting} ${preferences.userName}! I'm ${tutorName}, your personal study buddy.${subjectInfo} I'm here to help with any questions you might have. Just click this chat icon whenever you need me!`,
-          sender: 'tutor',
-          timestamp: new Date().toISOString()
-        });
-        
-        setHasGreetedUser(true);
-      }
+      const greeting = getSouthernGreeting();
+      const subjectInfo = selectedSubject ? ` I see you're studying ${selectedSubject.name}.` : '';
+      
+      // Send an initial greeting
+      sendMessage('', {
+        isSystemMessage: true,
+        text: `${greeting} ${preferences.userName}! I'm ${tutorName}, your personal study buddy.${subjectInfo} I'm here to help with any questions you might have. Just click this chat icon whenever you need me!`,
+        sender: 'tutor',
+        timestamp: new Date().toISOString()
+      });
+      
+      setHasGreetedUser(true);
     }
-  }, [preferences.userName, sendMessage, getSouthernGreeting, tutorName, selectedSubject, hasGreetedUser]);
+  }, [preferences, sendMessage, getSouthernGreeting, tutorName, selectedSubject, hasGreetedUser]);
   
   // Handle submitting the user's name
   const handleNameSubmit = () => {
     if (!nameInput.trim()) return;
+    
+    console.log('Submitting name:', nameInput);
     
     // Save the user's name in preferences
     setUserName(nameInput.trim());
@@ -135,7 +145,7 @@ const GlobalTutor = () => {
       topic: 'General',
       role: 'tutor',
       personality: 'southern',
-      userName: preferences.userName
+      userName: preferences?.userName
     });
     
     // Clear the input field
@@ -144,11 +154,12 @@ const GlobalTutor = () => {
   
   // Toggle the chat panel
   const toggleChat = () => {
+    console.log('Toggling chat:', !isOpen);
     setIsOpen(!isOpen);
   };
   
   return (
-    <>
+    <div className="global-tutor-container">
       {/* Name Prompt Modal */}
       {showNamePrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -182,7 +193,7 @@ const GlobalTutor = () => {
       {/* Floating chat button */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg z-40 transition-all duration-300 transform hover:scale-110"
+        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg z-50 transition-all duration-300 transform hover:scale-110"
         aria-label="Chat with tutor"
       >
         {isOpen ? <FiX size={24} /> : <FiMessageSquare size={24} />}
@@ -207,35 +218,41 @@ const GlobalTutor = () => {
             ref={chatContainerRef}
             className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[50vh]"
           >
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.sender !== 'user' && (
-                  <div className="flex-shrink-0 mr-2 mt-1">
-                    <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-800 flex items-center justify-center text-pink-500 dark:text-pink-300">
-                      {tutorName?.charAt(0) || 'T'}
-                    </div>
-                  </div>
-                )}
+            {messages && messages.length > 0 ? (
+              messages.map((msg, idx) => (
                 <div
-                  className={`max-w-3/4 rounded-lg px-4 py-2 ${
-                    msg.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                  }`}
+                  key={idx}
+                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  {msg.sender !== 'user' && msg.sender !== 'system' && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{tutorName}</p>
+                  {msg.sender !== 'user' && (
+                    <div className="flex-shrink-0 mr-2 mt-1">
+                      <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-800 flex items-center justify-center text-pink-500 dark:text-pink-300">
+                        {tutorName?.charAt(0) || 'T'}
+                      </div>
+                    </div>
                   )}
-                  <p>{msg.text}</p>
-                  {msg.sender === 'user' && preferences.userName && (
-                    <p className="text-xs text-right text-blue-300 mt-1">{preferences.userName}</p>
-                  )}
+                  <div
+                    className={`max-w-3/4 rounded-lg px-4 py-2 ${
+                      msg.sender === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    }`}
+                  >
+                    {msg.sender !== 'user' && msg.sender !== 'system' && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{tutorName}</p>
+                    )}
+                    <p>{msg.text}</p>
+                    {msg.sender === 'user' && preferences?.userName && (
+                      <p className="text-xs text-right text-blue-300 mt-1">{preferences.userName}</p>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                No messages yet. Start a conversation!
               </div>
-            ))}
+            )}
             
             {/* Typing indicator */}
             {isTyping && (
@@ -274,7 +291,7 @@ const GlobalTutor = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
