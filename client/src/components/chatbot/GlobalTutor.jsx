@@ -13,7 +13,10 @@ const GlobalTutor = () => {
   const [messageInput, setMessageInput] = useState('');
   const [nameInput, setNameInput] = useState('');
   const [showNamePrompt, setShowNamePrompt] = useState(false);
-  const [hasGreetedUser, setHasGreetedUser] = useState(false);
+  // Initialize hasGreetedUser from localStorage
+  const [hasGreetedUser, setHasGreetedUser] = useState(() => {
+    return localStorage.getItem('hasGreetedUser') === 'true';
+  });
   
   // Context hooks
   const { messages, sendMessage, isTyping } = useChatbot();
@@ -46,21 +49,55 @@ const GlobalTutor = () => {
   // Check if we should show the name prompt
   useEffect(() => {
     // For debugging
-    console.log('GlobalTutor mounted', { user, preferences, showNamePrompt, hasGreetedUser });
+    console.log('GlobalTutor mounted', { 
+      user, 
+      preferences, 
+      showNamePrompt, 
+      hasGreetedUser,
+      storedName: localStorage.getItem('userName'),
+      hasGreetedUserStorage: localStorage.getItem('hasGreetedUser')
+    });
     
-    // Show name prompt if user is logged in but hasn't provided a name yet
-    if (!preferences?.userName && !showNamePrompt && !hasGreetedUser) {
-      console.log('Showing name prompt');
-      setShowNamePrompt(true);
+    // First check if we have a name directly in localStorage
+    const storedName = localStorage.getItem('userName');
+    
+    // If we have a stored name, use it and don't show the prompt
+    if (storedName) {
+      console.log('Found name in localStorage:', storedName);
+      // Update preferences with the stored name
+      setUserName(storedName);
+      // Mark that we've greeted the user
+      if (!hasGreetedUser) {
+        setHasGreetedUser(true);
+        localStorage.setItem('hasGreetedUser', 'true');
+      }
+      // Don't show the name prompt
+      if (showNamePrompt) {
+        setShowNamePrompt(false);
+      }
+      return;
     }
     
-    // Check if we have a name in localStorage even if not in preferences
-    if (!preferences?.userName) {
-      const storedName = localStorage.getItem('userName');
-      if (storedName) {
-        console.log('Found name in localStorage:', storedName);
-        setUserName(storedName);
+    // If we have a name in preferences, don't show the prompt
+    if (preferences?.userName) {
+      // Store the name in localStorage for redundancy
+      localStorage.setItem('userName', preferences.userName);
+      // Mark that we've greeted the user
+      if (!hasGreetedUser) {
+        setHasGreetedUser(true);
+        localStorage.setItem('hasGreetedUser', 'true');
       }
+      // Don't show the name prompt
+      if (showNamePrompt) {
+        setShowNamePrompt(false);
+      }
+      return;
+    }
+    
+    // If we don't have a name anywhere and haven't shown the prompt yet, show it
+    if (!storedName && !preferences?.userName && !showNamePrompt && !hasGreetedUser) {
+      console.log('No name found, showing prompt');
+      setShowNamePrompt(true);
     }
   }, [preferences, showNamePrompt, hasGreetedUser, setUserName]);
   
@@ -98,25 +135,39 @@ const GlobalTutor = () => {
   
   // Send initial greeting when the component first mounts
   useEffect(() => {
-    if (firstRender.current && !hasGreetedUser && preferences?.userName) {
-      console.log('Sending initial greeting');
+    // Get the user's name from either preferences or localStorage
+    const userName = preferences?.userName || localStorage.getItem('userName');
+    
+    // Only send a greeting if this is the first render, we haven't greeted the user yet, and we have a name
+    if (firstRender.current && !hasGreetedUser && userName) {
+      console.log('Sending initial greeting to:', userName);
       firstRender.current = false;
       
-      // Only send a greeting if the user has already provided their name
+      // Generate a southern greeting
       const greeting = getSouthernGreeting();
       const subjectInfo = selectedSubject ? ` I see you're studying ${selectedSubject.name}.` : '';
       
       // Send an initial greeting
       sendMessage('', {
         isSystemMessage: true,
-        text: `${greeting} ${preferences.userName}! I'm ${tutorName}, your personal study buddy.${subjectInfo} I'm here to help with any questions you might have. Just click this chat icon whenever you need me!`,
+        text: `${greeting} ${userName}! I'm ${tutorName}, your personal study buddy.${subjectInfo} I'm here to help with any questions you might have. Just click this chat icon whenever you need me!`,
         sender: 'tutor',
         timestamp: new Date().toISOString()
       });
       
+      // Mark that we've greeted the user and save to localStorage
       setHasGreetedUser(true);
+      localStorage.setItem('hasGreetedUser', 'true');
+      
+      // Make sure the name is saved in both preferences and localStorage
+      if (!preferences?.userName && userName) {
+        setUserName(userName);
+      }
+      if (!localStorage.getItem('userName') && userName) {
+        localStorage.setItem('userName', userName);
+      }
     }
-  }, [preferences, sendMessage, getSouthernGreeting, tutorName, selectedSubject, hasGreetedUser]);
+  }, [preferences, sendMessage, getSouthernGreeting, tutorName, selectedSubject, hasGreetedUser, setUserName]);
   
   // Handle submitting the user's name
   const handleNameSubmit = () => {
