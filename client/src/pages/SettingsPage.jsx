@@ -2,8 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSubject } from "../contexts/SubjectContext";
 import { useAppearance } from "../context/AppearanceContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import ThemeToggle from "../components/ui/ThemeToggle";
+import {
+  MicrophoneIcon,
+  UserIcon,
+  KeyIcon,
+  MoonIcon,
+  SunIcon,
+  BellIcon,
+  CogIcon
+} from "@heroicons/react/24/outline";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -18,7 +27,7 @@ export default function SettingsPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
-  
+
   // Load user preferences when component mounts
   useEffect(() => {
     if (user && user.preferences) {
@@ -54,7 +63,7 @@ export default function SettingsPage() {
   const handleSaveSettings = async () => {
     setIsLoading(true);
     setMessage({ text: "", type: "" });
-    
+
     try {
       // Update user preferences with notification settings
       if (user && user.id) {
@@ -67,7 +76,7 @@ export default function SettingsPage() {
               notifications: notifications
             };
             localStorage.setItem("user", JSON.stringify(userData));
-            
+
             setMessage({ 
               text: "Settings saved successfully!", 
               type: "success" 
@@ -204,6 +213,34 @@ export default function SettingsPage() {
                 <span className="text-gray-700 dark:text-gray-300">Reduce motion</span>
               </label>
             </div>
+          </div>
+        </div>
+        
+        {/* Voice Settings Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors duration-200">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Voice Interaction</h2>
+          
+          <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+            <div>
+              <h3 className="text-md font-medium text-gray-700 dark:text-gray-300">Voice Settings</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Configure voice commands, cultural vocabulary support, and more</p>
+            </div>
+            <Link 
+              to="/voice-settings"
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors flex items-center"
+            >
+              <MicrophoneIcon className="w-5 h-5 mr-2" />
+              Configure
+            </Link>
+          </div>
+          
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <p>Access voice-enabled features:</p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li><Link to="/voice-flashcards" className="text-primary-600 hover:underline">Voice Flashcards</Link></li>
+              <li><Link to="/voice-exam" className="text-primary-600 hover:underline">Voice Exam Simulation</Link></li>
+              <li><Link to="/voice-demo" className="text-primary-600 hover:underline">Voice Demo</Link></li>
+            </ul>
           </div>
         </div>
         

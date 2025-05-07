@@ -70,7 +70,7 @@ export default function DashboardPage() {
     if (apiStats) {
       setLocalStats(apiStats);
     }
-  }, [apiStats]);
+  }, [apiStats]); // This dependency array ensures the effect only runs when apiStats changes
 
   // Show loading state
   if (isLoading && !localStats) {

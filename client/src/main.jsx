@@ -7,6 +7,7 @@ import { SubjectProvider } from "./contexts/SubjectContext";
 import { QueryProvider } from "./context/QueryProvider";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AppearanceProvider } from "./context/AppearanceContext";
+import { VoiceProvider } from "./context/VoiceContext";
 import { setupMockApiInterceptors } from "./utils/mockApiService";
 import './styles/appearance.css';
 import "./index.css";
@@ -24,7 +25,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <AuthProvider>
             <SubjectProvider>
               <AppearanceProvider>
-                <App />
+                <VoiceProvider>
+                  <App />
+                </VoiceProvider>
               </AppearanceProvider>
             </SubjectProvider>
           </AuthProvider>

@@ -12,6 +12,8 @@ import authRoute from "./routes/auth.js";
 import userPreferenceRoute from "./routes/userPreference.js";
 import diagnosticsRoute from "./routes/diagnostics.js";
 import migrationsRoute from "./routes/migrations.js";
+import voiceRoute from "./routes/voice.js";
+import tutorResponseRoute from "./routes/tutorResponse.js";
 
 dotenv.config();
 
@@ -20,7 +22,8 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Log all incoming requests
 app.use((req, res, next) => {
@@ -38,6 +41,8 @@ app.use("/api/auth", authRoute);
 app.use("/api/user-preference", userPreferenceRoute);
 app.use("/api/diagnostics", diagnosticsRoute);
 app.use("/api/migrations", migrationsRoute);
+app.use("/api/voice", voiceRoute);
+app.use("/api/tutor-response", tutorResponseRoute);
 
 app.get("/", (req, res) => {
   console.log("GET /");
@@ -47,6 +52,9 @@ app.get("/api/health", (req, res) => {
   console.log("GET /api/health");
   res.json({ status: "ok" });
 });
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
 app.get("/api/users", (req, res) => {
   console.log("GET /api/users");
   res.json({ message: "Users endpoint is working" });
