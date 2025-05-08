@@ -105,7 +105,7 @@ export default function SideNavigation({ onCollapse, isMobile }) {
         {/* Floating collapse/expand button - modern design */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute top-20 -right-4 z-40 w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 hover:from-primary-600 hover:to-purple-700 text-white rounded-full shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-300 hover:shadow-primary-500/30 hover:scale-110 active:scale-95 group"
+          className="absolute top-20 right-2 z-40 w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 hover:from-primary-600 hover:to-purple-700 text-white rounded-full shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-300 hover:shadow-primary-500/30 hover:scale-110 active:scale-95 group"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <div 
