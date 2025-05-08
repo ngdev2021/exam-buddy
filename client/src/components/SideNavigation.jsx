@@ -102,17 +102,17 @@ export default function SideNavigation({ onCollapse, isMobile }) {
         id="sidebar"
         className={`h-full bg-white dark:bg-gray-800 overflow-y-auto relative transition-all duration-500 ease-out ${isCollapsed ? 'w-[70px]' : 'w-full'}`}
       >
-        {/* Collapse/expand button */}
+        {/* Floating collapse/expand button - modern design */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute top-1/2 -right-3 transform -translate-y-1/2 z-40 flex items-center justify-center w-6 h-24 bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 border border-primary-400 dark:border-primary-500 rounded-r-md shadow-lg focus:outline-none transition-transform duration-200 hover:scale-105 active:scale-95"
+          className="absolute top-20 -right-4 z-40 w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 hover:from-primary-600 hover:to-purple-700 text-white rounded-full shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-300 hover:shadow-primary-500/30 hover:scale-110 active:scale-95 group"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          <div
-            className="bg-white dark:bg-gray-800 w-5 h-5 rounded-full flex items-center justify-center shadow-sm"
+          <div 
+            className="transition-all duration-300 flex items-center justify-center"
             style={{ transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}
           >
-            <ChevronLeftIcon className="w-3 h-3 text-primary-600 dark:text-primary-400" />
+            <ChevronRightIcon className="w-5 h-5 text-white group-hover:text-white/90" />
           </div>
         </button>
         
