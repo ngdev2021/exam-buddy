@@ -109,15 +109,15 @@ export default function SideNavigation({ onCollapse, isMobile }) {
           <div className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'justify-between p-4'} bg-gradient-to-r from-primary-600 to-purple-600 text-white`}>
             <div className="flex items-center">
               <SparklesIcon className={`w-6 h-6 ${isCollapsed ? '' : 'mr-2'}`} />
-              {!isCollapsed && (
+              {!isCollapsed ? (
                 <span className="font-bold text-lg tracking-wide">ExamBuddy</span>
-              )}
+              ) : null}
             </div>
             
             <div className="flex items-center space-x-2">
-              {!isCollapsed && (
+              {!isCollapsed ? (
                 <ThemeToggle className="text-white" />
-              )}
+              ) : null}
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
@@ -157,9 +157,9 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                         <span className={`transition-all duration-300 ${isCollapsed ? 'mr-0' : 'mr-3'}`}>
                           {item.icon}
                         </span>
-                        {!isCollapsed && (
+                        {!isCollapsed ? (
                           <span className="font-medium text-sm">{item.label}</span>
-                        )}
+                        ) : null}
                       </Link>
                     </li>
                   ))}
@@ -187,9 +187,9 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                         <span className={`transition-all duration-300 ${isCollapsed ? 'mr-0' : 'mr-3'}`}>
                           {item.icon}
                         </span>
-                        {!isCollapsed && (
+                        {!isCollapsed ? (
                           <span className="font-medium text-sm">{item.label}</span>
-                        )}
+                        ) : null}
                       </Link>
                     </li>
                   ))}
@@ -217,9 +217,9 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                         <span className={`transition-all duration-300 ${isCollapsed ? 'mr-0' : 'mr-3'}`}>
                           {item.icon}
                         </span>
-                        {!isCollapsed && (
+                        {!isCollapsed ? (
                           <span className="font-medium text-sm">{item.label}</span>
-                        )}
+                        ) : null}
                       </Link>
                     </li>
                   ))}
@@ -237,9 +237,9 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                   className="flex items-center px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                 >
                   <UserCircleIcon className={`w-5 h-5 ${isCollapsed ? '' : 'mr-3'} text-primary-500 dark:text-primary-400`} />
-                  {!isCollapsed && (
+                  {!isCollapsed ? (
                     <span className="font-medium text-sm">Your Profile</span>
-                  )}
+                  ) : null}
                 </Link>
               </li>
               <li className="transition-all duration-200 hover:translate-x-1 active:scale-95">
@@ -248,27 +248,27 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                   className="flex items-center w-full px-3 py-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 text-left"
                 >
                   <ArrowRightOnRectangleIcon className={`w-5 h-5 ${isCollapsed ? '' : 'mr-3'} text-red-500 dark:text-red-400`} />
-                  {!isCollapsed && (
+                  {!isCollapsed ? (
                     <span className="font-medium text-sm">Sign out</span>
-                  )}
+                  ) : null}
                 </button>
               </li>
             </ul>
             
             {/* Copyright notice */}
-            {!isCollapsed && (
+            {!isCollapsed ? (
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <p className="text-xs text-center text-gray-500 dark:text-gray-400">
                   © {new Date().getFullYear()} ExamBuddy
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
       
       {/* Tooltip for collapsed sidebar items */}
-      {isCollapsed && hoverItem && (
+      {isCollapsed && hoverItem ? (
         <div
           className="fixed z-50 px-3 py-2 text-sm font-medium text-white pointer-events-none"
           style={{
@@ -293,23 +293,25 @@ export default function SideNavigation({ onCollapse, isMobile }) {
               }}
             />
             <div className="flex items-center space-x-1">
+              {/* Safe rendering of tooltip content */}
               {(() => {
-                const navItem = navigationItems.find(item => item.path === hoverItem);
+                // Find the navigation item and cache it to avoid undefined issues
+                const navItem = navigationItems.find(item => item.path === hoverItem) || {};
                 return (
                   <>
-                    {navItem?.icon && (
+                    {navItem.icon ? (
                       <span className="opacity-75">
                         {navItem.icon}
                       </span>
-                    )}
-                    <span>{navItem?.label || 'Menu Item'}</span>
+                    ) : null}
+                    <span>{navItem.label || 'Menu Item'}</span>
                   </>
                 );
-              })()}                
+              })()}
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
