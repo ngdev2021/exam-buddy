@@ -102,19 +102,7 @@ export default function SideNavigation({ onCollapse, isMobile }) {
         id="sidebar"
         className={`h-full bg-white dark:bg-gray-800 overflow-y-auto relative transition-all duration-500 ease-out ${isCollapsed ? 'w-[70px]' : 'w-full'}`}
       >
-        {/* Floating collapse/expand button - modern design */}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute top-20 right-2 z-40 w-8 h-8 bg-gradient-to-br from-primary-500 to-purple-600 hover:from-primary-600 hover:to-purple-700 text-white rounded-full shadow-lg border-2 border-white dark:border-gray-800 flex items-center justify-center transition-all duration-300 hover:shadow-primary-500/30 hover:scale-110 active:scale-95 group"
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          <div 
-            className="transition-all duration-300 flex items-center justify-center"
-            style={{ transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}
-          >
-            <ChevronRightIcon className="w-5 h-5 text-white group-hover:text-white/90" />
-          </div>
-        </button>
+        {/* Removed floating button - moved to header */}
         
         <div className="flex flex-col h-full w-full">
           {/* Header with premium gradient */}
@@ -126,9 +114,23 @@ export default function SideNavigation({ onCollapse, isMobile }) {
               )}
             </div>
             
-            {!isCollapsed && (
-              <ThemeToggle className="text-white" />
-            )}
+            <div className="flex items-center space-x-2">
+              {!isCollapsed && (
+                <ThemeToggle className="text-white" />
+              )}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <div 
+                  className="transition-all duration-300 flex items-center justify-center"
+                  style={{ transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}
+                >
+                  <ChevronLeftIcon className="w-4 h-4 text-white" />
+                </div>
+              </button>
+            </div>
           </div>
           
           {/* Navigation */}
