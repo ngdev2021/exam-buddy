@@ -16,16 +16,32 @@ import {
   ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
 
-// Import framer-motion dynamically to avoid build issues
-let motion = { div: 'div', button: 'button', li: 'li', span: 'span', aside: 'aside' };
-let AnimatePresence = ({ children }) => <>{children}</>;
+// Create fallback components for framer-motion
+const fallbackMotion = {
+  div: ({ children, ...props }) => <div {...props}>{children}</div>,
+  button: ({ children, ...props }) => <button {...props}>{children}</button>,
+  li: ({ children, ...props }) => <li {...props}>{children}</li>,
+  span: ({ children, ...props }) => <span {...props}>{children}</span>,
+  aside: ({ children, ...props }) => <aside {...props}>{children}</aside>
+};
+
+const FallbackAnimatePresence = ({ children }) => <>{children}</>;
+
+// Set default values
+let motion = fallbackMotion;
+let AnimatePresence = FallbackAnimatePresence;
 
 // Only import framer-motion in browser environment
 if (typeof window !== 'undefined') {
   try {
+    // Use dynamic import with a fallback
     const framerMotion = require('framer-motion');
-    motion = framerMotion.motion;
-    AnimatePresence = framerMotion.AnimatePresence;
+    if (framerMotion && framerMotion.motion) {
+      motion = framerMotion.motion;
+    }
+    if (framerMotion && framerMotion.AnimatePresence) {
+      AnimatePresence = framerMotion.AnimatePresence;
+    }
   } catch (e) {
     console.warn('Framer Motion could not be loaded. Using fallback components.');
   }
@@ -540,8 +556,8 @@ export default function SideNavigation({ onCollapse, isMobile }) {
             className="fixed z-50 px-3 py-2 text-sm font-medium text-white pointer-events-none"
             style={{
               left: '80px',
-              top: `${document.querySelector(`a[href='${hoverItem}']`)?.getBoundingClientRect().top}px`,
-              translateY: '-50%',
+              top: '50%',
+              transform: 'translateY(-50%)',
               background: 'linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-purple-600) 100%)',
               borderRadius: '8px',
               boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
@@ -568,12 +584,19 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                 }}
               />
               <div className="flex items-center space-x-1">
-                {navigationItems.find(item => item.path === hoverItem)?.icon && (
-                  <span className="opacity-75">
-                    {navigationItems.find(item => item.path === hoverItem)?.icon}
-                  </span>
-                )}
-                <span>{navigationItems.find(item => item.path === hoverItem)?.label}</span>
+                {(() => {
+                  const navItem = navigationItems.find(item => item.path === hoverItem);
+                  return (
+                    <>
+                      {navItem?.icon && (
+                        <span className="opacity-75">
+                          {navItem.icon}
+                        </span>
+                      )}
+                      <span>{navItem?.label || 'Menu Item'}</span>
+                    </>
+                  );
+                })()}                
               </div>
             </div>
           </motion.div>
