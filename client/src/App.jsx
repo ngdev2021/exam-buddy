@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { BACKGROUNDS, SPACING, BORDERS, TEXT } from "./styles/theme";
 import SideNavigation from "./components/SideNavigation";
 import VoiceCommandHandler from "./components/voice/VoiceCommandHandler";
@@ -29,12 +29,6 @@ function App() {
   const { isAuthenticated } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const location = useLocation();
-  
-  // Scroll to top when route changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
   
   // Function to handle sidebar collapse state changes
   const handleSidebarCollapse = (collapsed) => {
