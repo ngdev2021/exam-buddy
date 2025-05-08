@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -9,17 +8,14 @@ export default defineConfig({
       "/api": "http://localhost:5000"
     }
   },
-  resolve: {
-    alias: {
-      'framer-motion': resolve(__dirname, 'node_modules/framer-motion')
-    }
-  },
-  optimizeDeps: {
-    include: ['framer-motion']
-  },
   build: {
-    commonjsOptions: {
-      include: [/framer-motion/, /node_modules/]
+    rollupOptions: {
+      external: ['framer-motion'],
+      output: {
+        globals: {
+          'framer-motion': 'framerMotion'
+        }
+      }
     }
   }
 });

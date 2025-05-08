@@ -15,7 +15,21 @@ import {
   CogIcon,
   ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
-import { motion, AnimatePresence } from 'framer-motion';
+
+// Import framer-motion dynamically to avoid build issues
+let motion = { div: 'div', button: 'button', li: 'li', span: 'span', aside: 'aside' };
+let AnimatePresence = ({ children }) => <>{children}</>;
+
+// Only import framer-motion in browser environment
+if (typeof window !== 'undefined') {
+  try {
+    const framerMotion = require('framer-motion');
+    motion = framerMotion.motion;
+    AnimatePresence = framerMotion.AnimatePresence;
+  } catch (e) {
+    console.warn('Framer Motion could not be loaded. Using fallback components.');
+  }
+}
 
 export default function SideNavigation({ onCollapse, isMobile }) {
   const location = useLocation();
