@@ -40,9 +40,8 @@ export default function SideNavigation({ onCollapse, isMobile }) {
     }
   }, [location.pathname]);
   
-  // Handle navigation click - simplified to work with React Router
+  // Function to close sidebar on mobile
   const handleNavClick = () => {
-    // Just close the mobile sidebar after navigation
     if (window.innerWidth < 768) {
       setIsOpen(false);
     }
@@ -67,6 +66,7 @@ export default function SideNavigation({ onCollapse, isMobile }) {
     };
   }, [isOpen]);
   
+  // Handle logout - this is the only place we use navigate() directly
   const handleLogout = () => {
     logout();
     navigate('/login');
