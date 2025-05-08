@@ -40,6 +40,19 @@ export default function SideNavigation({ onCollapse, isMobile }) {
     }
   }, [location.pathname]);
   
+  // Handle navigation click
+  const handleNavClick = (path) => {
+    // Only navigate if the path is different from current location
+    if (path !== location.pathname) {
+      navigate(path);
+    }
+    
+    // Close mobile sidebar after navigation
+    if (window.innerWidth < 768) {
+      setIsOpen(false);
+    }
+  };
+  
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -62,6 +75,11 @@ export default function SideNavigation({ onCollapse, isMobile }) {
   const handleLogout = () => {
     logout();
     navigate('/login');
+    
+    // Close mobile sidebar after logout
+    if (window.innerWidth < 768) {
+      setIsOpen(false);
+    }
   };
 
   // Check if a navigation item is active
@@ -146,6 +164,10 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                     <li key={item.path}>
                       <Link
                         to={item.path}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavClick(item.path);
+                        }}
                         className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
                           isActive(item.path) 
                             ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' 
@@ -176,6 +198,10 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                     <li key={item.path}>
                       <Link
                         to={item.path}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavClick(item.path);
+                        }}
                         className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
                           isActive(item.path) 
                             ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' 
@@ -206,6 +232,10 @@ export default function SideNavigation({ onCollapse, isMobile }) {
                     <li key={item.path}>
                       <Link
                         to={item.path}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavClick(item.path);
+                        }}
                         className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
                           isActive(item.path) 
                             ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400' 
@@ -234,6 +264,10 @@ export default function SideNavigation({ onCollapse, isMobile }) {
               <li className="transition-all duration-200 hover:translate-x-1 active:scale-95">
                 <Link
                   to="/profile"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick('/profile');
+                  }}
                   className="flex items-center px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                 >
                   <UserCircleIcon className={`w-5 h-5 ${isCollapsed ? '' : 'mr-3'} text-primary-500 dark:text-primary-400`} />
