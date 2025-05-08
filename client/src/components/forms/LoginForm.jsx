@@ -1,7 +1,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { BACKGROUNDS, BORDERS, BUTTONS, SHADOWS, TEXT, ANIMATIONS } from '../../styles/theme';
 
 export default function LoginForm() {
   const { login } = useAuth();
@@ -30,20 +31,23 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow p-8 w-full max-w-sm">
-      <h2 className="text-2xl font-bold mb-4 text-blue-700">Login</h2>
+    <form onSubmit={handleSubmit(onSubmit)} className={`${BACKGROUNDS.card} ${BORDERS.rounded} ${SHADOWS.lg} p-8 w-full max-w-md`}>
+      <h2 className={`${TEXT.title} text-primary-600 dark:text-primary-400 mb-6 text-center`}>Login</h2>
       
       {/* Show form-level errors */}
       {errors.root && (
-        <div className="text-red-500 mb-2">{errors.root.message}</div>
+        <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg mb-4 text-sm">
+          {errors.root.message}
+        </div>
       )}
       
       {/* Email field */}
-      <div className="mb-3">
+      <div className="mb-4">
+        <label className={`block ${TEXT.small} mb-1 font-medium text-gray-700 dark:text-gray-300`}>Email</label>
         <input
           type="email"
-          className={`w-full border p-2 rounded ${errors.email ? 'border-red-500' : ''}`}
-          placeholder="Email"
+          className={`w-full ${BORDERS.light} ${errors.email ? 'border-red-500 dark:border-red-400' : 'focus:border-primary-500 dark:focus:border-primary-400'} p-3 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/20 ${ANIMATIONS.hover}`}
+          placeholder="Enter your email"
           {...register('email', { 
             required: 'Email is required',
             pattern: {
@@ -53,16 +57,17 @@ export default function LoginForm() {
           })}
         />
         {errors.email && (
-          <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+          <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.email.message}</p>
         )}
       </div>
       
       {/* Password field */}
-      <div className="mb-4">
+      <div className="mb-6">
+        <label className={`block ${TEXT.small} mb-1 font-medium text-gray-700 dark:text-gray-300`}>Password</label>
         <input
           type="password"
-          className={`w-full border p-2 rounded ${errors.password ? 'border-red-500' : ''}`}
-          placeholder="Password"
+          className={`w-full ${BORDERS.light} ${errors.password ? 'border-red-500 dark:border-red-400' : 'focus:border-primary-500 dark:focus:border-primary-400'} p-3 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/20 ${ANIMATIONS.hover}`}
+          placeholder="Enter your password"
           {...register('password', { 
             required: 'Password is required',
             minLength: {
@@ -72,22 +77,22 @@ export default function LoginForm() {
           })}
         />
         {errors.password && (
-          <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+          <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.password.message}</p>
         )}
       </div>
       
       {/* Submit button */}
       <button 
         type="submit" 
-        className="w-full bg-blue-600 text-white rounded p-2 font-bold hover:bg-blue-700 disabled:opacity-50"
+        className={`w-full ${BUTTONS.primary} py-3 rounded-lg font-medium text-white ${SHADOWS.md} ${ANIMATIONS.scale} disabled:opacity-50 disabled:pointer-events-none`}
         disabled={isSubmitting}
       >
         {isSubmitting ? 'Logging in...' : 'Login'}
       </button>
       
       {/* Register link */}
-      <div className="mt-4 text-sm text-center">
-        Don't have an account? <a href="/register" className="text-blue-600 hover:underline">Register</a>
+      <div className={`mt-6 ${TEXT.small} text-center`}>
+        Don't have an account? <Link to="/register" className={`${TEXT.link} font-medium ml-1`}>Register</Link>
       </div>
     </form>
   );
