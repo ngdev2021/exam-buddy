@@ -85,28 +85,15 @@ function App() {
             {isAuthenticated && <VoiceCommandHandler />}
             <GlobalTutor />
             
-            <div className="flex w-full h-screen overflow-hidden">
-              {/* Mobile navigation for all pages when on mobile */}
-              {isMobile && <MobileNavBar />}
-              
-              {/* Desktop header - only visible on desktop */}
-              {!isMobile && isAuthenticated && (
-                <DesktopHeader sidebarWidth={sidebarCollapsed ? '70px' : '240px'} />
-              )}
-              
-              {/* Mobile overlay */}
-              {isMobile && sidebarOpen && isAuthenticated && (
-                <div 
-                  className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
-                  onClick={toggleSidebar}
-                  aria-hidden="true"
-                ></div>
-              )}
-              
+            {/* Mobile navigation for all pages when on mobile */}
+            {isMobile && <MobileNavBar />}
+            
+            {/* Desktop layout structure */}
+            <div className="flex h-screen w-full overflow-hidden">
               {/* Sidebar - always visible on desktop or when opened on mobile */}
               {isAuthenticated && (
                 <aside 
-                  className="h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out relative z-50"
+                  className="h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out z-50"
                   style={{ 
                     width: sidebarCollapsed && !isMobile ? '70px' : '240px',
                     transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
@@ -125,18 +112,30 @@ function App() {
                 </aside>
               )}
               
-              {/* Main content - flexible width */}
-              <div
-                className="flex-1"
-                style={{
-                  width: '100%',
-                  marginLeft: (!isMobile && isAuthenticated) ? (sidebarCollapsed ? '70px' : '240px') : '0',
-                  paddingTop: isMobile && isAuthenticated ? '64px' : '0',
-                }}
-              >
-                <main className={`flex-1 pt-4 ${!isMobile && isAuthenticated ? 'mt-16' : ''} pb-16 ${SPACING.container} overflow-y-auto`}
+              {/* Mobile overlay */}
+              {isMobile && sidebarOpen && isAuthenticated && (
+                <div 
+                  className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+                  onClick={toggleSidebar}
+                  aria-hidden="true"
+                ></div>
+              )}
+              
+              {/* Main content wrapper */}
+              <div className="flex flex-col flex-1 h-full">
+                {/* Desktop header - only visible on desktop */}
+                {!isMobile && isAuthenticated && (
+                  <header className="sticky top-0 z-40">
+                    <DesktopHeader sidebarWidth={sidebarCollapsed ? '70px' : '240px'} />
+                  </header>
+                )}
+                
+                {/* Main content area */}
+                <main 
+                  className={`flex-1 overflow-auto ${SPACING.container}`}
                   style={{
-                    paddingBottom: isMobile && isAuthenticated ? '70px' : '0', // Add bottom padding on mobile for the tab bar
+                    paddingTop: !isMobile && isAuthenticated ? '80px' : '16px',
+                    paddingBottom: isMobile && isAuthenticated ? '70px' : '16px',
                   }}
                 >
                   <Routes>
