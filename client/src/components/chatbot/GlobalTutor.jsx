@@ -12,11 +12,12 @@ const GlobalTutor = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [nameInput, setNameInput] = useState('');
-  const [showNamePrompt, setShowNamePrompt] = useState(false);
-  // Initialize hasGreetedUser from localStorage
-  const [hasGreetedUser, setHasGreetedUser] = useState(() => {
-    return localStorage.getItem('hasGreetedUser') === 'true';
-  });
+  
+  // Initialize state from localStorage only once during component definition
+  // This prevents state updates during render cycles
+  const initialHasGreeted = localStorage.getItem('hasGreetedUser') === 'true';
+  const [hasGreetedUser, setHasGreetedUser] = useState(initialHasGreeted);
+  const [showNamePrompt, setShowNamePrompt] = useState(false); // Initialize to false, set only once if needed
   
   // Context hooks
   const { messages, sendMessage, isTyping } = useChatbot();
@@ -26,7 +27,7 @@ const GlobalTutor = () => {
   
   // Refs
   const chatContainerRef = useRef(null);
-  const firstRender = useRef(true);
+  const hasInitialized = useRef(false);
   
   // Get the tutor name based on the selected subject
   const getTutorNameForSubject = (subjectName) => {
@@ -46,60 +47,45 @@ const GlobalTutor = () => {
   
   const tutorName = preferences?.tutorName || getTutorNameForSubject(selectedSubject?.name);
   
-  // Check if we should show the name prompt
+  // One-time initialization effect - runs only once after the first render
   useEffect(() => {
-    // For debugging
-    console.log('GlobalTutor mounted', { 
-      user, 
-      preferences, 
-      showNamePrompt, 
-      hasGreetedUser,
-      storedName: localStorage.getItem('userName'),
-      hasGreetedUserStorage: localStorage.getItem('hasGreetedUser')
-    });
+    // Skip if already initialized to prevent infinite loops
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
     
-    // First check if we have a name directly in localStorage
+    // Get stored name once
     const storedName = localStorage.getItem('userName');
     
-    // If we have a stored name, use it and don't show the prompt
+    // Determine if we need to show the name prompt
+    let shouldShowPrompt = false;
+    
+    // Case 1: We have a name in localStorage
     if (storedName) {
-      console.log('Found name in localStorage:', storedName);
-      // Update preferences with the stored name
-      setUserName(storedName);
-      // Mark that we've greeted the user
-      if (!hasGreetedUser) {
-        setHasGreetedUser(true);
-        localStorage.setItem('hasGreetedUser', 'true');
+      // Only update preferences if the name is different
+      if (!preferences?.userName || preferences.userName !== storedName) {
+        setUserName(storedName);
       }
-      // Don't show the name prompt
-      if (showNamePrompt) {
-        setShowNamePrompt(false);
-      }
-      return;
     }
-    
-    // If we have a name in preferences, don't show the prompt
-    if (preferences?.userName) {
-      // Store the name in localStorage for redundancy
+    // Case 2: We have a name in preferences but not in localStorage
+    else if (preferences?.userName) {
+      // Save to localStorage for persistence
       localStorage.setItem('userName', preferences.userName);
-      // Mark that we've greeted the user
-      if (!hasGreetedUser) {
-        setHasGreetedUser(true);
-        localStorage.setItem('hasGreetedUser', 'true');
-      }
-      // Don't show the name prompt
-      if (showNamePrompt) {
-        setShowNamePrompt(false);
-      }
-      return;
+    }
+    // Case 3: No name found anywhere and user hasn't been greeted
+    else if (!initialHasGreeted) {
+      shouldShowPrompt = true;
     }
     
-    // If we don't have a name anywhere and haven't shown the prompt yet, show it
-    if (!storedName && !preferences?.userName && !showNamePrompt && !hasGreetedUser) {
-      console.log('No name found, showing prompt');
+    // Update name prompt state only if needed
+    if (shouldShowPrompt) {
       setShowNamePrompt(true);
     }
-  }, [preferences, showNamePrompt, hasGreetedUser, setUserName]);
+    
+    // Ensure hasGreetedUser is set in localStorage if needed
+    if (!initialHasGreeted && (storedName || preferences?.userName)) {
+      localStorage.setItem('hasGreetedUser', 'true');
+    }
+  }, [preferences?.userName, initialHasGreeted, setUserName]);
   
   // Scroll to bottom of chat when new messages arrive
   useEffect(() => {
