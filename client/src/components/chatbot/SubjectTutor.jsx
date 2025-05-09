@@ -73,9 +73,35 @@ const SubjectTutor = ({ topic }) => {
   // Store the current topic to prevent inconsistencies
   const [currentTopic, setCurrentTopic] = useState('');
 
+  // Detect if we're on a mobile device
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check for mobile device on component mount
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Handle topic changes without adding chat messages (now handled by GlobalTutor)
   useEffect(() => {
-    if (topic && selectedSubject) {
+    if (!topic || !selectedSubject) return;
+    
+    // Create a flag to track if the component is still mounted
+    let isMounted = true;
+    
+    // Use requestAnimationFrame for smoother rendering, especially on mobile
+    const loadLesson = () => {
       try {
         // Wrap in try-catch to handle any potential errors
         console.log('Loading lesson for:', topic, 'in subject:', selectedSubject.name);
@@ -84,59 +110,80 @@ const SubjectTutor = ({ topic }) => {
         const lessonContent = getLesson(selectedSubject.name, topic);
         console.log('Lesson content loaded:', lessonContent ? 'success' : 'empty');
         
-        // Use a function form of setState to ensure we're working with the latest state
-        setLesson(() => lessonContent);
-        
-        // Track this topic in visited topics - with error handling
-        try {
-          addVisitedTopic(topic);
-        } catch (visitError) {
-          console.warn('Error adding visited topic:', visitError);
-          // Continue even if tracking fails
+        // Only update state if component is still mounted
+        if (isMounted) {
+          // Use a function form of setState to ensure we're working with the latest state
+          setLesson(() => lessonContent);
+          
+          // Track this topic in visited topics - with error handling
+          try {
+            addVisitedTopic(topic);
+          } catch (visitError) {
+            console.warn('Error adding visited topic:', visitError);
+            // Continue even if tracking fails
+          }
+          
+          // Store the current topic to maintain consistency
+          setCurrentTopic(topic);
+          
+          // Reset quiz state when topic changes - use function form for state updates
+          setQuizAnswers({});
+          setQuizSubmitted(false);
+          setQuizScore(0);
+          setActiveSection(0);
         }
         
-        // Store the current topic to maintain consistency
-        setCurrentTopic(topic);
-        
-        // Reset quiz state when topic changes - use function form for state updates
-        setQuizAnswers({});
-        setQuizSubmitted(false);
-        setQuizScore(0);
-        setActiveSection(0);
-        
-        // Send a topic change notification to the global tutor via the ChatbotContext
-        // This will be handled by the GlobalTutor component
-        // Use a timeout to ensure the UI updates first
-        setTimeout(() => {
-          try {
-            sendMessage('', {
-              isSystemMessage: true,
-              text: `I'm now studying ${topic} in ${selectedSubject.name}.`,
-              sender: 'system',
-              timestamp: new Date().toISOString(),
-              topic: topic,
-              subject: selectedSubject.name,
-              isTopicChange: true
-            });
-          } catch (msgError) {
-            console.warn('Error sending topic change message:', msgError);
-            // Continue even if message sending fails
-          }
-        }, 0);
+        // Send a topic change notification using requestAnimationFrame for better mobile performance
+        if (isMounted) {
+          window.requestAnimationFrame(() => {
+            try {
+              sendMessage('', {
+                isSystemMessage: true,
+                text: `I'm now studying ${topic} in ${selectedSubject.name}.`,
+                sender: 'system',
+                timestamp: new Date().toISOString(),
+                topic: topic,
+                subject: selectedSubject.name,
+                isTopicChange: true
+              });
+            } catch (msgError) {
+              console.warn('Error sending topic change message:', msgError);
+              // Continue even if message sending fails
+            }
+          });
+        }
       } catch (error) {
         console.error('Error in topic change effect:', error);
-        // Provide fallback behavior
-        setLesson({
-          title: topic || 'Selected Topic',
-          description: `Learn about ${topic} in ${selectedSubject?.name || 'this subject'}.`,
-          sections: [{
-            title: 'Introduction',
-            content: [`We're preparing content about ${topic}. Please try again in a moment.`]
-          }]
-        });
+        // Provide fallback behavior if component is still mounted
+        if (isMounted) {
+          setLesson({
+            title: topic || 'Selected Topic',
+            description: `Learn about ${topic} in ${selectedSubject?.name || 'this subject'}.`,
+            sections: [{
+              title: 'Introduction',
+              content: [`We're preparing content about ${topic}. Please try again in a moment.`]
+            }]
+          });
+        }
       }
+    };
+    
+    // Use different approaches based on device type
+    if (isMobile) {
+      // On mobile, delay the lesson loading slightly to ensure UI is responsive
+      const timeoutId = setTimeout(loadLesson, 50);
+      return () => {
+        clearTimeout(timeoutId);
+        isMounted = false;
+      };
+    } else {
+      // On desktop, load immediately but still use requestAnimationFrame
+      window.requestAnimationFrame(loadLesson);
+      return () => {
+        isMounted = false;
+      };
     }
-  }, [topic, selectedSubject, addVisitedTopic, sendMessage]);
+  }, [topic, selectedSubject, addVisitedTopic, sendMessage, isMobile]);
 
   const handleSectionChange = (index) => {
     setActiveSection(index);

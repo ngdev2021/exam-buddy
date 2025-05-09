@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useChatbot } from '../context/ChatbotContext';
 import { useSubject } from '../contexts/SubjectContext';
 import SubjectTutor from '../components/chatbot/SubjectTutor';
@@ -9,82 +9,225 @@ const TutorPage = () => {
   const [selectedTopic, setSelectedTopic] = useState('');
   const [customTopic, setCustomTopic] = useState('');
   const [popularTopics, setPopularTopics] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { sendMessage } = useChatbot();
   const { selectedSubject } = useSubject();
   
-  // Update popular topics when selected subject changes
-  useEffect(() => {
-    if (selectedSubject) {
-      // Get all topics for the current subject
-      const allTopics = getTopicsForSubject(selectedSubject.name);
-      
-      // Use all topics or limit to 8 if there are too many
-      setPopularTopics(allTopics.slice(0, 8));
-      
-      // Reset selected topic when subject changes
-      setSelectedTopic('');
-      setCustomTopic('');
-    }
-  }, [selectedSubject]);
+  // Reference to track if component is mounted
+  const isMounted = useRef(true);
   
-  // Handle topic selection with error handling and Chrome-specific fixes
+  // Detect mobile device on component mount
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      if (isMounted.current) {
+        setIsMobile(mobile);
+      }
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup function
+    return () => {
+      isMounted.current = false;
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+  
+  // Update popular topics when selected subject changes with mobile-specific handling
+  useEffect(() => {
+    if (!selectedSubject || !isMounted.current) return;
+    
+    // Set loading state
+    setIsLoading(true);
+    
+    // Use different approaches based on device type
+    const loadTopics = () => {
+      try {
+        // Get all topics for the current subject
+        const allTopics = getTopicsForSubject(selectedSubject.name);
+        
+        // Only update state if component is still mounted
+        if (isMounted.current) {
+          // Use all topics or limit to 8 if there are too many
+          setPopularTopics(allTopics.slice(0, 8));
+          
+          // Reset selected topic when subject changes
+          setSelectedTopic('');
+          setCustomTopic('');
+          
+          // Clear loading state
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading topics:', error);
+        if (isMounted.current) {
+          setIsLoading(false);
+          setPopularTopics([]);
+        }
+      }
+    };
+    
+    // Use different timing strategies based on device type
+    if (isMobile) {
+      // On mobile, delay the topic loading slightly to ensure UI is responsive
+      const timeoutId = setTimeout(() => {
+        window.requestAnimationFrame(loadTopics);
+      }, 50);
+      
+      return () => clearTimeout(timeoutId);
+    } else {
+      // On desktop, load immediately but still use requestAnimationFrame
+      window.requestAnimationFrame(loadTopics);
+    }
+  }, [selectedSubject, isMobile]);
+  
+  // Handle topic selection with improved mobile handling
   const handleTopicSelect = (topic) => {
+    if (!isMounted.current) return;
+    
     try {
       console.log('Selecting topic:', topic);
-      // Use a small timeout to avoid Chrome rendering issues
-      // This helps prevent the blank screen issue in non-incognito Chrome
-      setTimeout(() => {
-        setSelectedTopic(topic);
-        setCustomTopic('');
-      }, 0);
+      
+      // Set loading state to prevent UI issues
+      setIsLoading(true);
+      
+      // Use different strategies based on device type
+      if (isMobile) {
+        // On mobile, use requestAnimationFrame for smoother transitions
+        window.requestAnimationFrame(() => {
+          // Batch state updates to avoid multiple renders
+          setSelectedTopic(topic);
+          setCustomTopic('');
+          
+          // Add a small delay before clearing loading state on mobile
+          setTimeout(() => {
+            if (isMounted.current) {
+              setIsLoading(false);
+            }
+          }, 100);
+        });
+      } else {
+        // On desktop, use standard approach with small timeout
+        setTimeout(() => {
+          setSelectedTopic(topic);
+          setCustomTopic('');
+          setIsLoading(false);
+        }, 0);
+      }
     } catch (error) {
       console.error('Error selecting topic:', error);
+      
       // Fallback - try direct assignment if setState fails
       try {
-        setSelectedTopic(topic);
+        if (isMounted.current) {
+          setSelectedTopic(topic);
+          setCustomTopic('');
+          setIsLoading(false);
+        }
       } catch (fallbackError) {
         console.error('Fallback topic selection failed:', fallbackError);
+        
         // Last resort - force a re-render
-        window.location.hash = `#topic-${encodeURIComponent(topic)}`;
+        if (isMounted.current) {
+          setIsLoading(false);
+          // Use history API instead of hash for better compatibility
+          const state = { topic };
+          window.history.replaceState(state, '', window.location.pathname);
+        }
       }
     }
   };
   
-  // Handle custom topic input with error handling
+  // Handle custom topic input with improved mobile handling
   const handleCustomTopicChange = (e) => {
+    if (!isMounted.current) return;
+    
     try {
       const value = e.target.value;
       console.log('Setting custom topic:', value);
       
-      // Use a small timeout to avoid Chrome rendering issues
-      setTimeout(() => {
-        setCustomTopic(value);
-        setSelectedTopic('');
-      }, 0);
+      // Use different strategies based on device type
+      if (isMobile) {
+        // On mobile, use requestAnimationFrame for smoother transitions
+        window.requestAnimationFrame(() => {
+          // Batch state updates to avoid multiple renders
+          setCustomTopic(value);
+          setSelectedTopic('');
+        });
+      } else {
+        // On desktop, use standard approach with small timeout
+        setTimeout(() => {
+          setCustomTopic(value);
+          setSelectedTopic('');
+        }, 0);
+      }
     } catch (error) {
       console.error('Error setting custom topic:', error);
+      
       // Fallback approach if the state update fails
-      try {
-        setCustomTopic(e.target.value || '');
-      } catch (fallbackError) {
-        console.error('Fallback custom topic setting failed:', fallbackError);
+      if (isMounted.current) {
+        try {
+          // Direct state update as fallback
+          setCustomTopic(e.target.value || '');
+          setSelectedTopic('');
+        } catch (fallbackError) {
+          console.error('Fallback custom topic setting failed:', fallbackError);
+        }
       }
     }
   };
   
-  // Handle asking about a topic with error handling
+  // Handle asking about a topic with improved mobile handling
   const handleAskAboutTopic = () => {
+    if (!isMounted.current) return;
+    
     try {
       const topic = selectedTopic || customTopic;
       console.log('Asking about topic:', topic);
       
-      if (topic) {
-        // Use a small timeout to avoid Chrome rendering issues
+      if (!topic) return;
+      
+      // Set loading state briefly to prevent UI issues
+      setIsLoading(true);
+      
+      // Use different strategies based on device type
+      if (isMobile) {
+        // On mobile, use requestAnimationFrame for smoother transitions
+        window.requestAnimationFrame(() => {
+          try {
+            sendMessage(`Can you explain ${topic} in simple terms?`);
+            
+            // Clear loading state after a short delay
+            setTimeout(() => {
+              if (isMounted.current) {
+                setIsLoading(false);
+              }
+            }, 100);
+          } catch (msgError) {
+            console.error('Error sending message:', msgError);
+            // Clear loading state
+            if (isMounted.current) {
+              setIsLoading(false);
+            }
+            // Try an alternative approach if the first fails
+            alert(`Please ask the tutor about: ${topic}`);
+          }
+        });
+      } else {
+        // On desktop, use standard approach with small timeout
         setTimeout(() => {
           try {
             sendMessage(`Can you explain ${topic} in simple terms?`);
+            setIsLoading(false);
           } catch (msgError) {
             console.error('Error sending message:', msgError);
+            setIsLoading(false);
             // Try an alternative approach if the first fails
             alert(`Please ask the tutor about: ${topic}`);
           }
@@ -92,6 +235,10 @@ const TutorPage = () => {
       }
     } catch (error) {
       console.error('Error in handleAskAboutTopic:', error);
+      // Clear loading state
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
       // Fallback for severe errors
       const fallbackTopic = selectedTopic || customTopic || 'this topic';
       alert(`Please try asking about ${fallbackTopic} again in a moment.`);
@@ -101,6 +248,16 @@ const TutorPage = () => {
   return (
     <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">  {/* Added bottom padding for mobile */}
       <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-center">{selectedSubject?.name || 'Subject'} Tutor</h1>
+      
+      {/* Loading overlay - shown during state transitions to prevent blank screen */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-lg flex items-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mr-3"></div>
+            <p className="text-gray-700 dark:text-gray-300">Loading...</p>
+          </div>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Left sidebar - Topic selection */}
