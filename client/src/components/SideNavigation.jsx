@@ -119,12 +119,33 @@ export default function SideNavigation({ onCollapse, isMobile, isOpen, toggleSid
               <button
                 onClick={toggleSidebar}
                 className="p-1 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Close menu"
+                aria-label="Close sidebar"
               >
                 <XMarkIcon className="w-5 h-5" />
               </button>
             )}
           </div>
+          
+          {/* Subject Selector - Only visible when not collapsed */}
+          {!isCollapsed && (
+            <div className="px-3 py-3 border-b border-gray-200 dark:border-gray-700">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Current Subject</label>
+              <select 
+                value={selectedSubject?.name || ''}
+                onChange={(e) => {
+                  const selected = subjects.find(s => s.name === e.target.value);
+                  if (selected) setSelectedSubject(selected);
+                }}
+                className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                {subjects.map(subject => (
+                  <option key={subject.name} value={subject.name}>
+                    {subject.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           
           {/* Navigation */}
           <nav className="flex-1 px-2 py-4">
