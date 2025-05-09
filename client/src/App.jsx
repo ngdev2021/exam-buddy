@@ -97,36 +97,42 @@ function App() {
                 ></div>
               )}
               
-              {/* Sidebar - only visible on desktop */}
-              {isAuthenticated && !isMobile && (
+              {/* Sidebar - always visible on desktop or when opened on mobile */}
+              {isAuthenticated && (
                 <aside 
-                  className="h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out relative z-30"
+                  className="h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out relative z-50"
                   style={{ 
-                    width: sidebarCollapsed ? '70px' : '280px',
-                    transition: 'all 0.3s cubic-bezier(0.19, 1.0, 0.22, 1.0)'
+                    width: sidebarCollapsed && !isMobile ? '70px' : '240px',
+                    transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+                    position: isMobile ? 'fixed' : 'relative',
+                    height: '100%',
+                    boxShadow: isMobile && sidebarOpen ? '0 0 15px rgba(0,0,0,0.2)' : 'none'
                   }}
                 >
                   <SideNavigation 
-                    onCollapse={handleSidebarCollapse} 
-                    isMobile={false} 
+                    isMobile={isMobile}
+                    isOpen={sidebarOpen}
+                    toggleSidebar={toggleSidebar}
                     isCollapsed={sidebarCollapsed}
+                    onCollapse={handleSidebarCollapse}
                   />
                 </aside>
               )}
               
               {/* Main content - flexible width */}
               <div
-                className={`flex-1 flex flex-col min-h-screen ${BACKGROUNDS.main} overflow-y-auto`}
+                className="flex-1"
                 style={{
-                  transition: 'all 0.3s cubic-bezier(0.19, 1.0, 0.22, 1.0)',
-                  minHeight: '100vh',
                   width: '100%',
-                  marginLeft: (!isMobile && isAuthenticated) ? (sidebarCollapsed ? '70px' : '280px') : '0',
+                  marginLeft: (!isMobile && isAuthenticated) ? (sidebarCollapsed ? '70px' : '240px') : '0',
                   paddingTop: isMobile && isAuthenticated ? '64px' : '0',
-                  paddingBottom: isMobile && isAuthenticated ? '70px' : '0' // Add bottom padding on mobile for the tab bar
                 }}
               >
-                <main className={`flex-1 pt-4 md:pt-16 pb-16 ${SPACING.container}`}>
+                <main className={`flex-1 pt-4 md:pt-16 pb-16 ${SPACING.container} overflow-y-auto`}
+                  style={{
+                    paddingBottom: isMobile && isAuthenticated ? '70px' : '0', // Add bottom padding on mobile for the tab bar
+                  }}
+                >
                   <Routes>
                     {/* Public routes */}
                     <Route path="login" element={<LoginPage />} />

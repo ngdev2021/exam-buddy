@@ -209,6 +209,30 @@ const LessonsPage = () => {
   
   return (
     <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
+      {/* Lessons Introduction Banner */}
+      <div className="mb-6 bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-lg p-4 border border-green-100 dark:border-green-800">
+        <h1 className="text-2xl font-bold mb-2 text-green-800 dark:text-green-300 flex items-center">
+          <FaBook className="mr-2" /> Structured Lessons
+        </h1>
+        <p className="text-gray-700 dark:text-gray-300 mb-3">
+          Welcome to the Lessons section! Unlike the interactive AI Tutor, this section provides <span className="font-medium">structured, self-paced learning</span> with organized content. 
+          Select a topic below to access comprehensive lessons with chapters and flashcards for {selectedSubject?.name || 'your subject'}.
+        </p>
+        <div className="flex flex-wrap gap-2 text-sm">
+          <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-green-200 dark:border-green-700 flex items-center">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+            Structured content
+          </div>
+          <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-green-200 dark:border-green-700 flex items-center">
+            <span className="w-2 h-2 bg-teal-500 rounded-full mr-2"></span>
+            Chapter-based learning
+          </div>
+          <div className="bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-green-200 dark:border-green-700 flex items-center">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>
+            Flashcard review
+          </div>
+        </div>
+      </div>
       <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-center">
         {selectedSubject?.name || 'Subject'} Lessons
       </h1>
