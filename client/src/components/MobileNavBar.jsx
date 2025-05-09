@@ -4,6 +4,7 @@ import { useSubject } from "../contexts/SubjectContext";
 import { navigationItems } from "../config/navigation.jsx";
 import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "./ui/ThemeToggle";
+import { GRADIENTS, BACKGROUNDS } from "../styles/theme";
 import { 
   HomeIcon, 
   AcademicCapIcon, 
@@ -22,9 +23,12 @@ import {
 export default function MobileNavBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showSubjectMenu, setShowSubjectMenu] = useState(false);
+  
+  // Determine authentication status from the user object
+  const isAuthenticated = !!user;
   
   // Only access subject context if authenticated
   const subjectContext = isAuthenticated ? useSubject() : { subjects: [], selectedSubject: null, setSelectedSubject: () => {} };
@@ -95,7 +99,7 @@ export default function MobileNavBar() {
       {/* Top header for mobile */}
       <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between px-4 py-3 z-50 md:hidden border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="flex items-center">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+          <div className={`flex-shrink-0 w-8 h-8 rounded-full ${GRADIENTS.primaryToPurple} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
             <AcademicCapIcon className="w-5 h-5" />
           </div>
           <span className="font-bold text-lg text-gray-800 dark:text-gray-100 ml-2">ExamBuddy</span>
@@ -184,9 +188,9 @@ export default function MobileNavBar() {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden animate-fade-in">
           <div className="absolute top-16 left-0 right-0 bottom-16 bg-white dark:bg-gray-800 overflow-y-auto">
             {/* User profile section */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20">
+            <div className={`p-4 border-b border-gray-200 dark:border-gray-700 ${GRADIENTS.subtlePrimary}`}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-medium shadow-md">
+                <div className={`w-12 h-12 rounded-full ${GRADIENTS.primaryToPurple} flex items-center justify-center text-white font-medium shadow-md`}>
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div>
