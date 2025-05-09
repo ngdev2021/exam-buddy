@@ -51,12 +51,14 @@ function App() {
     const handleResize = () => {
       // Desktop is >= 992px for better tablet support
       const mobileView = window.innerWidth < 992;
+      console.log('Window width:', window.innerWidth, 'Mobile view:', mobileView);
       setIsMobile(mobileView);
       if (mobileView) {
         setSidebarOpen(false);
       } else {
         setSidebarOpen(true);
       }
+      console.log('After resize - isMobile:', mobileView, 'sidebarOpen:', !mobileView);
     };
     
     // Restore user preference for sidebar collapsed state
@@ -78,6 +80,9 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
+  // Debug log for render
+  console.log('Render state - isMobile:', isMobile, 'isAuthenticated:', isAuthenticated, 'sidebarOpen:', sidebarOpen, 'sidebarCollapsed:', sidebarCollapsed);
+
   return (
     <ChatbotProvider>
       <UserPreferencesProvider>
@@ -88,6 +93,7 @@ function App() {
             
             {/* Mobile navigation for all pages when on mobile */}
             {isMobile && <MobileNavBar />}
+            {console.log('Should show MobileNavBar?', isMobile)}
             
             {/* Layout structure - different for mobile vs desktop */}
             <div className="flex h-screen w-full overflow-hidden">
@@ -121,6 +127,7 @@ function App() {
               {/* Main content wrapper */}
               <div className="flex flex-col flex-1 h-full">
                 {/* Desktop header - only visible on desktop */}
+                {console.log('Should show DesktopHeader?', !isMobile && isAuthenticated)}
                 {!isMobile && isAuthenticated && (
                   <div className="sticky top-0 z-40">
                     <DesktopHeader />

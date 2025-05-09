@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { TEXT, BACKGROUNDS } from '../styles/theme';
 
 const DesktopHeader = () => {
+  console.log('DesktopHeader rendering');
   const { user } = useAuth();
 
   return (

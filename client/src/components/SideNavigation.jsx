@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function SideNavigation({ onCollapse, isMobile, isOpen, toggleSidebar, isCollapsed: propIsCollapsed }) {
+  console.log('SideNavigation props:', { isMobile, isOpen, propIsCollapsed });
   const location = useLocation();
   const navigate = useNavigate();
   const { subjects, selectedSubject, setSelectedSubject } = useSubject();
@@ -29,6 +30,7 @@ export default function SideNavigation({ onCollapse, isMobile, isOpen, toggleSid
   useEffect(() => {
     if (propIsCollapsed !== undefined) {
       setIsCollapsed(propIsCollapsed);
+      console.log('SideNavigation updated isCollapsed:', propIsCollapsed);
     }
   }, [propIsCollapsed]);
   
