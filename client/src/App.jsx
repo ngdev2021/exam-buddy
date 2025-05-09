@@ -88,7 +88,7 @@ function App() {
             {/* Mobile navigation for all pages when on mobile */}
             {isMobile && <MobileNavBar />}
             
-            {/* Desktop layout structure */}
+            {/* Layout structure - different for mobile vs desktop */}
             <div className="flex h-screen w-full overflow-hidden">
               {/* Sidebar - always visible on desktop or when opened on mobile */}
               {isAuthenticated && (
@@ -125,8 +125,8 @@ function App() {
               <div className="flex flex-col flex-1 h-full">
                 {/* Desktop header - only visible on desktop */}
                 {!isMobile && isAuthenticated && (
-                  <header className="sticky top-0 z-40">
-                    <DesktopHeader sidebarWidth={sidebarCollapsed ? '70px' : '240px'} />
+                  <header className="fixed top-0 right-0 z-40" style={{ left: sidebarCollapsed ? '70px' : '240px' }}>
+                    <DesktopHeader />
                   </header>
                 )}
                 
@@ -134,7 +134,8 @@ function App() {
                 <main 
                   className={`flex-1 overflow-auto ${SPACING.container}`}
                   style={{
-                    paddingTop: !isMobile && isAuthenticated ? '80px' : '16px',
+                    paddingTop: !isMobile && isAuthenticated ? '24px' : '16px',
+                    marginTop: !isMobile && isAuthenticated ? '64px' : '0',
                     paddingBottom: isMobile && isAuthenticated ? '70px' : '16px',
                   }}
                 >

@@ -4,7 +4,7 @@ import { FaUser, FaCog, FaBell, FaSearch } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { TEXT, BACKGROUNDS } from '../styles/theme';
 
-const DesktopHeader = ({ sidebarWidth = '240px' }) => {
+const DesktopHeader = () => {
   const { user } = useAuth();
 
   return (
