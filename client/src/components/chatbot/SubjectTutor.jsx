@@ -76,35 +76,67 @@ const SubjectTutor = ({ topic }) => {
   // Handle topic changes without adding chat messages (now handled by GlobalTutor)
   useEffect(() => {
     if (topic && selectedSubject) {
-      // Get lesson content based on the selected subject and topic
-      const lessonContent = getLesson(selectedSubject.name, topic);
-      setLesson(lessonContent);
-      
-      // Track this topic in visited topics
-      addVisitedTopic(topic);
-      
-      // Store the current topic to maintain consistency
-      setCurrentTopic(topic);
-      
-      // Reset quiz state when topic changes
-      setQuizAnswers({});
-      setQuizSubmitted(false);
-      setQuizScore(0);
-      setActiveSection(0);
-      
-      // Send a topic change notification to the global tutor via the ChatbotContext
-      // This will be handled by the GlobalTutor component
-      sendMessage('', {
-        isSystemMessage: true,
-        text: `I'm now studying ${topic} in ${selectedSubject.name}.`,
-        sender: 'system',
-        timestamp: new Date().toISOString(),
-        topic: topic,
-        subject: selectedSubject.name,
-        isTopicChange: true
-      });
+      try {
+        // Wrap in try-catch to handle any potential errors
+        console.log('Loading lesson for:', topic, 'in subject:', selectedSubject.name);
+        
+        // Get lesson content based on the selected subject and topic
+        const lessonContent = getLesson(selectedSubject.name, topic);
+        console.log('Lesson content loaded:', lessonContent ? 'success' : 'empty');
+        
+        // Use a function form of setState to ensure we're working with the latest state
+        setLesson(() => lessonContent);
+        
+        // Track this topic in visited topics - with error handling
+        try {
+          addVisitedTopic(topic);
+        } catch (visitError) {
+          console.warn('Error adding visited topic:', visitError);
+          // Continue even if tracking fails
+        }
+        
+        // Store the current topic to maintain consistency
+        setCurrentTopic(topic);
+        
+        // Reset quiz state when topic changes - use function form for state updates
+        setQuizAnswers({});
+        setQuizSubmitted(false);
+        setQuizScore(0);
+        setActiveSection(0);
+        
+        // Send a topic change notification to the global tutor via the ChatbotContext
+        // This will be handled by the GlobalTutor component
+        // Use a timeout to ensure the UI updates first
+        setTimeout(() => {
+          try {
+            sendMessage('', {
+              isSystemMessage: true,
+              text: `I'm now studying ${topic} in ${selectedSubject.name}.`,
+              sender: 'system',
+              timestamp: new Date().toISOString(),
+              topic: topic,
+              subject: selectedSubject.name,
+              isTopicChange: true
+            });
+          } catch (msgError) {
+            console.warn('Error sending topic change message:', msgError);
+            // Continue even if message sending fails
+          }
+        }, 0);
+      } catch (error) {
+        console.error('Error in topic change effect:', error);
+        // Provide fallback behavior
+        setLesson({
+          title: topic || 'Selected Topic',
+          description: `Learn about ${topic} in ${selectedSubject?.name || 'this subject'}.`,
+          sections: [{
+            title: 'Introduction',
+            content: [`We're preparing content about ${topic}. Please try again in a moment.`]
+          }]
+        });
+      }
     }
-  }, [topic, selectedSubject, preferences.userName, tutorName, getSouthernGreeting, addVisitedTopic]);
+  }, [topic, selectedSubject, addVisitedTopic, sendMessage]);
 
   const handleSectionChange = (index) => {
     setActiveSection(index);

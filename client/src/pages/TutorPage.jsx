@@ -27,23 +27,74 @@ const TutorPage = () => {
     }
   }, [selectedSubject]);
   
-  // Handle topic selection
+  // Handle topic selection with error handling and Chrome-specific fixes
   const handleTopicSelect = (topic) => {
-    setSelectedTopic(topic);
-    setCustomTopic('');
+    try {
+      console.log('Selecting topic:', topic);
+      // Use a small timeout to avoid Chrome rendering issues
+      // This helps prevent the blank screen issue in non-incognito Chrome
+      setTimeout(() => {
+        setSelectedTopic(topic);
+        setCustomTopic('');
+      }, 0);
+    } catch (error) {
+      console.error('Error selecting topic:', error);
+      // Fallback - try direct assignment if setState fails
+      try {
+        setSelectedTopic(topic);
+      } catch (fallbackError) {
+        console.error('Fallback topic selection failed:', fallbackError);
+        // Last resort - force a re-render
+        window.location.hash = `#topic-${encodeURIComponent(topic)}`;
+      }
+    }
   };
   
-  // Handle custom topic input
+  // Handle custom topic input with error handling
   const handleCustomTopicChange = (e) => {
-    setCustomTopic(e.target.value);
-    setSelectedTopic('');
+    try {
+      const value = e.target.value;
+      console.log('Setting custom topic:', value);
+      
+      // Use a small timeout to avoid Chrome rendering issues
+      setTimeout(() => {
+        setCustomTopic(value);
+        setSelectedTopic('');
+      }, 0);
+    } catch (error) {
+      console.error('Error setting custom topic:', error);
+      // Fallback approach if the state update fails
+      try {
+        setCustomTopic(e.target.value || '');
+      } catch (fallbackError) {
+        console.error('Fallback custom topic setting failed:', fallbackError);
+      }
+    }
   };
   
-  // Handle asking about a topic
+  // Handle asking about a topic with error handling
   const handleAskAboutTopic = () => {
-    const topic = selectedTopic || customTopic;
-    if (topic) {
-      sendMessage(`Can you explain ${topic} in simple terms?`);
+    try {
+      const topic = selectedTopic || customTopic;
+      console.log('Asking about topic:', topic);
+      
+      if (topic) {
+        // Use a small timeout to avoid Chrome rendering issues
+        setTimeout(() => {
+          try {
+            sendMessage(`Can you explain ${topic} in simple terms?`);
+          } catch (msgError) {
+            console.error('Error sending message:', msgError);
+            // Try an alternative approach if the first fails
+            alert(`Please ask the tutor about: ${topic}`);
+          }
+        }, 0);
+      }
+    } catch (error) {
+      console.error('Error in handleAskAboutTopic:', error);
+      // Fallback for severe errors
+      const fallbackTopic = selectedTopic || customTopic || 'this topic';
+      alert(`Please try asking about ${fallbackTopic} again in a moment.`);
     }
   };
   
