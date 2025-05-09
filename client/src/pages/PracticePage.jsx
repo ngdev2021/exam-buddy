@@ -393,7 +393,10 @@ export default function PracticePage() {
               </div>
               
               <QuestionCard
-                question={questions[currentIndex]}
+                question={{
+                  ...questions[currentIndex],
+                  isLastQuestion: currentIndex === questions.length - 1
+                }}
                 onScore={handleScoreUpdate}
                 onNext={handleNextQuestion}
                 theme="modern"

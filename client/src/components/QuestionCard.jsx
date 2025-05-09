@@ -75,7 +75,7 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
         
         {/* Answer options */}
         <div className="space-y-3 mb-6">
-          {Array.isArray(questionData.choices) ? (
+          {questionData && questionData.choices && Array.isArray(questionData.choices) ? (
             questionData.choices.map((c, i) => {
               const isSelected = selected === c;
               const isCorrect = c === questionData.answer;
@@ -166,7 +166,7 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
             className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
             onClick={onNext}
           >
-            {onNext.name === 'handleNextQuestion' ? 'Next Question' : 'View Results'}
+            {onNext && typeof onNext === 'function' && onNext.name === 'handleNextQuestion' && questionData && questionData.isLastQuestion ? 'View Results' : 'Next Question'}
             <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -192,7 +192,7 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
         <p className="text-lg font-medium text-gray-800 dark:text-gray-200">{questionData.question}</p>
       </div>
       <div className="grid gap-4 mb-6">
-        {Array.isArray(questionData.choices) ? (
+        {questionData && questionData.choices && Array.isArray(questionData.choices) ? (
           questionData.choices.map((c, i) => {
           const isSelected = selected === c;
           const isCorrect = c === questionData.answer;
