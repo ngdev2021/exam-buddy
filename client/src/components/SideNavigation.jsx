@@ -75,8 +75,8 @@ export default function SideNavigation({ onCollapse, isMobile, isOpen, toggleSid
   
   // Group navigation items by category
   const navGroups = {
-    main: navigationItems.filter(item => ['/', '/practice', '/test', '/dashboard'].includes(item.path)),
-    tools: navigationItems.filter(item => ['/calculator', '/tutor'].includes(item.path)),
+    main: navigationItems.filter(item => ['/', '/practice', '/test', '/dashboard', '/lessons'].includes(item.path)),
+    tools: navigationItems.filter(item => ['/calculator'].includes(item.path)),
     voice: navigationItems.filter(item => ['/voice-demo', '/voice-flashcards', '/voice-exam'].includes(item.path))
   };
   
