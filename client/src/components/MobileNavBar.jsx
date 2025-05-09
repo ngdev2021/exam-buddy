@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSubject } from "../contexts/SubjectContext";
 import { navigationItems } from "../config/navigation.jsx";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "./ui/ThemeToggle";
 import { 
   HomeIcon, 
