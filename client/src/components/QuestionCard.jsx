@@ -31,9 +31,12 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
 
   // Handle initial selection - show confirmation
   const handleInitialSelect = (choice) => {
-    if (answered) return; // Prevent multiple selections
+    if (answered || showConfirmation) return; // Prevent multiple selections or changes during confirmation
     setPendingSelection(choice);
-    setShowConfirmation(true);
+    // Use setTimeout to ensure state update completes
+    setTimeout(() => {
+      setShowConfirmation(true);
+    }, 50);
   };
 
   // Handle confirmation of answer
@@ -41,40 +44,50 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
     if (answered || !pendingSelection) return;
     
     const choice = pendingSelection;
+    
+    // First mark the answer as confirmed visually but keep dialog visible briefly
     setSelected(choice);
     setAnswered(true);
-    setShowConfirmation(false);
-    setShowNext(false);
     
-    try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/evaluate-answer`, {
-        userAnswer: choice,
-        correctAnswer: questionData.answer,
-        explanation: questionData.explanation
-      });
+    // Wait a moment before hiding the confirmation dialog so user can see the selection was confirmed
+    setTimeout(async () => {
+      setShowConfirmation(false);
+      setShowNext(false);
       
-      setFeedback(res.data.feedback);
-      setShowNext(true);
-      onScore(res.data.isCorrect);
-      
-      // For incorrect answers, don't auto-advance
-      if (res.data.isCorrect && onNext && typeof onNext === 'function') {
-        // Wait 2 seconds to show feedback before moving to next question
-        setTimeout(() => {
-          onNext();
-        }, 2000);
+      try {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/evaluate-answer`, {
+          userAnswer: choice,
+          correctAnswer: questionData.answer,
+          explanation: questionData.explanation
+        });
+        
+        setFeedback(res.data.feedback);
+        setShowNext(true);
+        onScore(res.data.isCorrect);
+        
+        // For incorrect answers, don't auto-advance
+        if (res.data.isCorrect && onNext && typeof onNext === 'function') {
+          // Wait 2 seconds to show feedback before moving to next question
+          setTimeout(() => {
+            onNext();
+          }, 2000);
+        }
+      } catch (err) {
+        console.error('Error evaluating answer:', err);
+        setFeedback("Could not evaluate answer.");
+        setShowNext(true);
       }
-    } catch (err) {
-      console.error('Error evaluating answer:', err);
-      setFeedback("Could not evaluate answer.");
-      setShowNext(true);
-    }
+    }, 300); // Added delay to ensure confirmation is visible
   };
 
   // Cancel selection
   const handleCancelSelection = () => {
-    setPendingSelection("");
+    // First hide the confirmation dialog
     setShowConfirmation(false);
+    // Then clear the pending selection after a short delay
+    setTimeout(() => {
+      setPendingSelection("");
+    }, 100);
   };
 
 
