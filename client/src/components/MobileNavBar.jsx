@@ -1,9 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSubject } from "../contexts/SubjectContext";
 import { navigationItems } from "../config/navigation.jsx";
 import { useAuth } from "../context/AuthContext";
 import ThemeToggle from "./ui/ThemeToggle";
+import { 
+  HomeIcon, 
+  AcademicCapIcon, 
+  ClipboardDocumentCheckIcon, 
+  ChartBarIcon,
+  Bars3Icon,
+  XMarkIcon,
+  UserCircleIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+  BeakerIcon,
+  ChatBubbleLeftRightIcon,
+  CalculatorIcon
+} from "@heroicons/react/24/outline";
 
 export default function MobileNavBar() {
   const location = useLocation();
@@ -13,10 +27,33 @@ export default function MobileNavBar() {
   const [showMenu, setShowMenu] = useState(false);
   const [showSubjectMenu, setShowSubjectMenu] = useState(false);
   
+  // Define the main navigation tabs for the bottom bar
+  const mainTabs = [
+    { path: '/', label: 'Home', icon: <HomeIcon className="w-6 h-6" /> },
+    { path: '/practice', label: 'Practice', icon: <AcademicCapIcon className="w-6 h-6" /> },
+    { path: '/test', label: 'Test', icon: <ClipboardDocumentCheckIcon className="w-6 h-6" /> },
+    { path: '/dashboard', label: 'Stats', icon: <ChartBarIcon className="w-6 h-6" /> }
+  ];
+  
+  // Define the menu items for the hamburger menu
+  const menuItems = [
+    { path: '/profile', label: 'Profile', icon: <UserCircleIcon className="w-5 h-5" />, color: 'text-blue-500' },
+    { path: '/settings', label: 'Settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'text-gray-500' },
+    { path: '/calculator', label: 'Calculator', icon: <CalculatorIcon className="w-5 h-5" />, color: 'text-green-500' },
+    { path: '/tutor', label: 'AI Tutor', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" />, color: 'text-purple-500' },
+    { path: '/voice-demo', label: 'Voice Tools', icon: <BeakerIcon className="w-5 h-5" />, color: 'text-orange-500' },
+  ];
+  
   // Check if a navigation item is active
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
+  
+  // Close menu when route changes
+  useEffect(() => {
+    setShowMenu(false);
+    setShowSubjectMenu(false);
+  }, [location.pathname]);
   
   const handleLogout = () => {
     logout();
@@ -27,19 +64,22 @@ export default function MobileNavBar() {
   return (
     <>
       {/* Top header for mobile */}
-      <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between px-4 py-2 z-50 md:hidden border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+      <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md flex items-center justify-between px-4 py-3 z-50 md:hidden border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="flex items-center">
-          <span className="font-bold text-lg text-primary-600 dark:text-primary-400">ExamBuddy</span>
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+            <AcademicCapIcon className="w-5 h-5" />
+          </div>
+          <span className="font-bold text-lg text-gray-800 dark:text-gray-100 ml-2">ExamBuddy</span>
         </div>
         
         <div className="flex items-center gap-3">
           {/* Subject selector */}
           <button 
             onClick={() => setShowSubjectMenu(!showSubjectMenu)}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-300 dark:border-gray-600"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
             aria-label="Select subject"
           >
-            <span className="text-xs font-medium truncate max-w-[80px]">{selectedSubject.name}</span>
+            <span className="text-xs font-medium truncate max-w-[80px]">{selectedSubject?.name || 'Select Subject'}</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -48,91 +88,88 @@ export default function MobileNavBar() {
           {/* Theme toggle */}
           <ThemeToggle />
           
-          {/* User profile button */}
+          {/* Hamburger menu button */}
           <button 
             onClick={() => setShowMenu(!showMenu)}
-            className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500"
-            aria-label="User menu"
+            className="p-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Menu"
           >
-            <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-medium">
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-            </div>
+            {showMenu ? (
+              <XMarkIcon className="w-6 h-6" />
+            ) : (
+              <Bars3Icon className="w-6 h-6" />
+            )}
           </button>
         </div>
       </header>
       
-      {/* Bottom navigation bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg flex justify-around py-2 z-50 md:hidden border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
-        {navigationItems.map(item => (
+      {/* Bottom navigation bar with 4 main tabs */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg flex justify-around py-1.5 z-50 md:hidden border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
+        {mainTabs.map(item => (
           <Link
             key={item.path}
             to={item.path}
-            className={`flex flex-col items-center text-xs font-medium px-2 py-1 transition-colors ${isActive(item.path) 
+            className={`flex flex-col items-center text-xs font-medium px-2 py-1.5 transition-colors ${isActive(item.path) 
               ? "text-primary-600 dark:text-primary-400" 
               : "text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-300"}`}
             aria-label={item.label}
           >
-            {item.icon}
+            <div className={`p-1.5 rounded-full ${isActive(item.path) ? 'bg-primary-100 dark:bg-primary-900/30' : ''}`}>
+              {React.cloneElement(item.icon, { 
+                className: `w-5 h-5 ${isActive(item.path) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}` 
+              })}
+            </div>
             <span className="mt-0.5">{item.label}</span>
-            {isActive(item.path) && (
-              <div className="w-1.5 h-1.5 rounded-full bg-primary-600 dark:bg-primary-400 mt-1"></div>
-            )}
           </Link>
         ))}
       </nav>
       
-      {/* Slide-up menu panel */}
+      {/* Full-screen menu overlay */}
       {showMenu && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden animate-fade-in">
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 rounded-t-xl shadow-lg animate-slide-up max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-center pt-2 pb-1">
-              <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-            </div>
-            
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="absolute top-16 left-0 right-0 bottom-16 bg-white dark:bg-gray-800 overflow-y-auto">
+            {/* User profile section */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-medium">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-medium shadow-md">
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800 dark:text-gray-200">{user?.name || 'User'}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">{user?.name || 'User'}</p>
                   <p className="text-gray-500 dark:text-gray-400 text-xs">{user?.email || ''}</p>
                 </div>
               </div>
             </div>
             
-            <div className="p-2">
-              <Link 
-                to="/profile" 
-                className="flex items-center p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                onClick={() => setShowMenu(false)}
-              >
-                <span className="text-sm">Your Profile</span>
-              </Link>
-              
-              <Link 
-                to="/settings" 
-                className="flex items-center p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                onClick={() => setShowMenu(false)}
-              >
-                <span className="text-sm">Settings</span>
-              </Link>
-              
-              <button 
-                onClick={handleLogout}
-                className="flex items-center w-full p-3 text-left text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-              >
-                <span className="text-sm">Sign out</span>
-              </button>
-            </div>
-            
+            {/* Tiled menu items */}
             <div className="p-4">
-              <button 
-                onClick={() => setShowMenu(false)}
-                className="w-full py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md text-sm font-medium"
-              >
-                Close Menu
-              </button>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">MENU</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {menuItems.map(item => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="flex flex-col items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
+                    onClick={() => setShowMenu(false)}
+                  >
+                    <div className={`p-2 rounded-full ${item.color} bg-opacity-10 dark:bg-opacity-20 mb-2`}>
+                      {item.icon}
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center">{item.label}</span>
+                  </Link>
+                ))}
+                
+                {/* Logout button styled as a menu item */}
+                <button
+                  onClick={handleLogout}
+                  className="flex flex-col items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-red-300 dark:hover:border-red-700 transition-colors"
+                >
+                  <div className="p-2 rounded-full text-red-500 bg-red-100 dark:bg-red-900/20 mb-2">
+                    <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-red-600 dark:text-red-400 text-center">Sign Out</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -141,27 +178,38 @@ export default function MobileNavBar() {
       {/* Subject selection dropdown */}
       {showSubjectMenu && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden animate-fade-in" onClick={() => setShowSubjectMenu(false)}>
-          <div className="absolute top-14 right-4 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 ring-1 ring-black ring-opacity-5 transition-colors duration-200" onClick={e => e.stopPropagation()}>
-            <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Subject</p>
-            </div>
-            {subjects.map(subject => (
-              <button
-                key={subject.name}
-                className={`w-full text-left px-3 py-2 text-sm ${selectedSubject.name === subject.name 
-                  ? 'bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-300' 
-                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                onClick={() => {
-                  setSelectedSubject(subject);
-                  setShowSubjectMenu(false);
-                }}
+          <div className="absolute top-16 right-0 left-0 bg-white dark:bg-gray-800 shadow-lg py-1 z-50 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200" onClick={e => e.stopPropagation()}>
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <p className="font-medium text-gray-800 dark:text-gray-200">Select Subject</p>
+              <button 
+                onClick={() => setShowSubjectMenu(false)}
+                className="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                {subject.name}
+                <XMarkIcon className="w-5 h-5" />
               </button>
-            ))}
+            </div>
+            <div className="max-h-[50vh] overflow-y-auto p-2">
+              <div className="grid grid-cols-2 gap-2">
+                {subjects.map(subject => (
+                  <button
+                    key={subject.name}
+                    className={`p-3 rounded-lg text-left ${selectedSubject?.name === subject.name 
+                      ? 'bg-primary-100 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700 border' 
+                      : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700'}`}
+                    onClick={() => {
+                      setSelectedSubject(subject);
+                      setShowSubjectMenu(false);
+                    }}
+                  >
+                    <p className="font-medium text-sm text-gray-800 dark:text-gray-200">{subject.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subject.groups.length} groups</p>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
-    </>  
+    </>
   );
 }

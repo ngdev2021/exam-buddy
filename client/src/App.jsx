@@ -92,41 +92,21 @@ function App() {
                 ></div>
               )}
               
-              {/* Sidebar - dynamic width based on collapse state */}
-              {isAuthenticated && (
+              {/* Sidebar - only visible on desktop */}
+              {isAuthenticated && !isMobile && (
                 <aside 
-                  className={`h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out ${isMobile ? 'fixed left-0 top-0 bottom-0 z-50' : 'relative z-30'}`}
+                  className="h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out relative z-30"
                   style={{ 
-                    width: sidebarCollapsed && !isMobile ? '70px' : (isMobile ? '280px' : '280px'),
-                    transform: isMobile && !sidebarOpen ? 'translateX(-100%)' : 'translateX(0)',
-                    transition: 'all 0.3s cubic-bezier(0.19, 1.0, 0.22, 1.0)',
-                    boxShadow: isMobile ? '0 4px 20px rgba(0,0,0,0.15)' : 'none'
+                    width: sidebarCollapsed ? '70px' : '280px',
+                    transition: 'all 0.3s cubic-bezier(0.19, 1.0, 0.22, 1.0)'
                   }}
                 >
                   <SideNavigation 
                     onCollapse={handleSidebarCollapse} 
-                    isMobile={isMobile} 
-                    isOpen={sidebarOpen}
-                    toggleSidebar={toggleSidebar}
+                    isMobile={false} 
                     isCollapsed={sidebarCollapsed}
                   />
                 </aside>
-              )}
-              
-              {/* Mobile header with menu button */}
-              {isMobile && isAuthenticated && (
-                <div className="fixed top-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 z-30 shadow-sm">
-                  <button 
-                    onClick={toggleSidebar}
-                    className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
-                    aria-label="Toggle menu"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  </button>
-                  <div className="ml-4 font-semibold text-gray-800 dark:text-gray-200">Exam Buddy</div>
-                </div>
               )}
               
               {/* Main content - flexible width */}
@@ -138,7 +118,7 @@ function App() {
                   width: '100%',
                   marginLeft: (!isMobile && isAuthenticated) ? (sidebarCollapsed ? '70px' : '280px') : '0',
                   paddingTop: isMobile && isAuthenticated ? '64px' : '0',
-                  paddingBottom: isMobile ? '70px' : '0'
+                  paddingBottom: isMobile && isAuthenticated ? '70px' : '0' // Add bottom padding on mobile for the tab bar
                 }}
               >
                 <main className={`flex-1 pt-4 md:pt-16 pb-16 ${SPACING.container}`}>
