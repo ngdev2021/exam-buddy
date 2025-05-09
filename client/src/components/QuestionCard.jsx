@@ -6,6 +6,8 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState("");
+  const [pendingSelection, setPendingSelection] = useState(""); // For confirmation step
+  const [showConfirmation, setShowConfirmation] = useState(false); // Show confirmation dialog
   const [feedback, setFeedback] = useState("");
   const [showNext, setShowNext] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -16,6 +18,8 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
   useEffect(() => {
     setQuestionData(question);
     setSelected("");
+    setPendingSelection("");
+    setShowConfirmation(false);
     setFeedback("");
     setShowNext(false);
     setBookmarked(false);
@@ -25,12 +29,21 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
     setTimeout(() => setProgress(100), 200);
   }, [question]);
 
-  // Handle answer selection
-  const handleSelect = async (choice) => {
+  // Handle initial selection - show confirmation
+  const handleInitialSelect = (choice) => {
     if (answered) return; // Prevent multiple selections
+    setPendingSelection(choice);
+    setShowConfirmation(true);
+  };
+
+  // Handle confirmation of answer
+  const handleConfirmSelection = async () => {
+    if (answered || !pendingSelection) return;
     
+    const choice = pendingSelection;
     setSelected(choice);
     setAnswered(true);
+    setShowConfirmation(false);
     setShowNext(false);
     
     try {
@@ -56,6 +69,12 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
       setFeedback("Could not evaluate answer.");
       setShowNext(true);
     }
+  };
+
+  // Cancel selection
+  const handleCancelSelection = () => {
+    setPendingSelection("");
+    setShowConfirmation(false);
   };
 
 
@@ -89,17 +108,44 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
           <p className="text-lg text-gray-800 dark:text-gray-200">{questionData.question}</p>
         </div>
         
+        {/* Confirmation Dialog */}
+        {showConfirmation && (
+          <div className="mb-6 bg-primary-50 dark:bg-primary-900/20 p-4 rounded-lg border border-primary-200 dark:border-primary-700 text-center">
+            <p className="mb-3 text-gray-800 dark:text-gray-200">Are you sure you want to select this answer?</p>
+            <p className="mb-4 font-medium text-primary-700 dark:text-primary-400">"{pendingSelection}"</p>
+            <div className="flex space-x-3 justify-center">
+              <button
+                onClick={handleCancelSelection}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors duration-200"
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSelection}
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors duration-200"
+                type="button"
+              >
+                Confirm Answer
+              </button>
+            </div>
+          </div>
+        )}
+        
         {/* Answer options */}
         <div className="space-y-3 mb-6">
           {questionData && questionData.choices && Array.isArray(questionData.choices) ? (
             questionData.choices.map((c, i) => {
               const isSelected = selected === c;
+              const isPending = pendingSelection === c;
               const isCorrect = c === questionData.answer;
               const isIncorrectSelection = selected && isSelected && !isCorrect;
               
               let optionClass = "w-full text-left p-4 rounded-lg border transition-all duration-200 flex items-start";
               
-              if (selected) {
+              if (isPending) {
+                optionClass += " bg-primary-50 dark:bg-primary-900/10 border-primary-300 dark:border-primary-600 ring-2 ring-primary-300 dark:ring-primary-600";
+              } else if (selected) {
                 if (isSelected && isCorrect) {
                   optionClass += " bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-400";
                 } else if (isIncorrectSelection) {
@@ -112,15 +158,15 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
               } else {
                 optionClass += isSelected
                   ? " bg-primary-50 dark:bg-primary-900/20 border-primary-500 dark:border-primary-400 ring-2 ring-primary-500 dark:ring-primary-400"
-                  : " bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600/50";
+                  : " bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-primary-300 dark:hover:border-primary-600";
               }
               
               return (
                 <button
                   key={i}
                   className={optionClass}
-                  disabled={answered}
-                  onClick={() => handleSelect(c)}
+                  disabled={answered || showConfirmation}
+                  onClick={() => handleInitialSelect(c)}
                   type="button"
                   tabIndex={0}
                   aria-label={`Answer ${String.fromCharCode(65 + i)}: ${c}`}
@@ -209,15 +255,42 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
       <div className="mb-6">
         <p className="text-lg font-medium text-gray-800 dark:text-gray-200">{questionData.question}</p>
       </div>
+      {/* Confirmation Dialog */}
+      {showConfirmation && (
+        <div className="mb-6 bg-primary-50 dark:bg-primary-900/20 p-4 rounded-lg border border-primary-200 dark:border-primary-700 text-center">
+          <p className="mb-3 text-gray-800 dark:text-gray-200">Are you sure you want to select this answer?</p>
+          <p className="mb-4 font-medium text-primary-700 dark:text-primary-400">"{pendingSelection}"</p>
+          <div className="flex space-x-3 justify-center">
+            <button
+              onClick={handleCancelSelection}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors duration-200"
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmSelection}
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors duration-200"
+              type="button"
+            >
+              Confirm Answer
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="grid gap-4 mb-6">
         {questionData && questionData.choices && Array.isArray(questionData.choices) ? (
           questionData.choices.map((c, i) => {
           const isSelected = selected === c;
+          const isPending = pendingSelection === c;
           const isCorrect = c === questionData.answer;
           const base =
             "block w-full text-left px-4 py-3 rounded-lg border transition-all duration-200 font-medium focus:outline-none";
           let color = "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 hover:border-primary-400 text-gray-800 dark:text-gray-200";
-          if (selected) {
+          if (isPending) {
+            color = "bg-primary-50 dark:bg-primary-900/10 border-primary-300 dark:border-primary-600 text-primary-800 dark:text-primary-300 ring-2 ring-primary-300 dark:ring-primary-600";
+          } else if (selected) {
             if (isSelected && isCorrect) color = "bg-green-50 dark:bg-green-900/20 border-green-400 dark:border-green-400 text-green-800 dark:text-green-200";
             else if (isSelected) color = "bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-400 text-red-800 dark:text-red-200";
             else if (isCorrect) color = "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800/30 text-green-700 dark:text-green-300";
@@ -227,8 +300,8 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
             <button
               key={c}
               className={`${base} ${color}`}
-              disabled={answered}
-              onClick={() => handleSelect(c)}
+              disabled={answered || showConfirmation}
+              onClick={() => handleInitialSelect(c)}
               tabIndex={0}
               type="button"
               aria-label={`Answer ${String.fromCharCode(65 + i)}: ${c}`}
