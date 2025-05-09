@@ -21,6 +21,7 @@ import VoiceSettingsPage from "./pages/VoiceSettingsPage";
 import TutorPage from "./pages/TutorPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
+import MobileNavBar from "./components/MobileNavBar"; // Import MobileNavBar
 import { useAuth } from "./context/AuthContext";
 import { ChatbotProvider } from "./context/ChatbotContext";
 import { UserPreferencesProvider } from "./context/UserPreferencesContext";
@@ -83,6 +84,9 @@ function App() {
             <GlobalTutor />
             
             <div className="flex w-full h-screen overflow-hidden">
+              {/* Mobile navigation for authenticated users */}
+              {isMobile && isAuthenticated && <MobileNavBar />}
+              
               {/* Mobile overlay */}
               {isMobile && sidebarOpen && isAuthenticated && (
                 <div 

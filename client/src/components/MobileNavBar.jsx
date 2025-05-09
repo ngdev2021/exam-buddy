@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSubject } from "../contexts/SubjectContext";
 import { navigationItems } from "../config/navigation.jsx";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import ThemeToggle from "./ui/ThemeToggle";
 import { 
   HomeIcon, 
@@ -27,13 +27,39 @@ export default function MobileNavBar() {
   const [showMenu, setShowMenu] = useState(false);
   const [showSubjectMenu, setShowSubjectMenu] = useState(false);
   
-  // Define the main navigation tabs for the bottom bar
-  const mainTabs = [
+  // Define all possible navigation tabs
+  const allTabs = [
     { path: '/', label: 'Home', icon: <HomeIcon className="w-6 h-6" /> },
     { path: '/practice', label: 'Practice', icon: <AcademicCapIcon className="w-6 h-6" /> },
     { path: '/test', label: 'Test', icon: <ClipboardDocumentCheckIcon className="w-6 h-6" /> },
-    { path: '/dashboard', label: 'Stats', icon: <ChartBarIcon className="w-6 h-6" /> }
+    { path: '/dashboard', label: 'Stats', icon: <ChartBarIcon className="w-6 h-6" /> },
+    { path: '/tutor', label: 'Tutor', icon: <ChatBubbleLeftRightIcon className="w-6 h-6" /> },
+    { path: '/calculator', label: 'Calc', icon: <CalculatorIcon className="w-6 h-6" /> }
   ];
+  
+  // Get current path to determine which tab to replace
+  const currentPath = location.pathname === '/' ? '/' : `/${location.pathname.split('/')[1]}`;
+  
+  // Dynamically create the main tabs, replacing the current page's tab with another important one
+  const mainTabs = useMemo(() => {
+    // Core tabs that should always be shown if not on their page
+    const coreTabs = ['/', '/practice', '/test', '/dashboard'];
+    
+    // Find the current tab
+    const currentTabIndex = allTabs.findIndex(tab => tab.path === currentPath);
+    
+    // If we're on a core tab page, replace it with the next most important tab
+    if (currentTabIndex !== -1 && coreTabs.includes(currentPath)) {
+      // Create a new array with all core tabs except the current one
+      const availableTabs = allTabs.filter(tab => tab.path !== currentPath);
+      
+      // Select the first 4 tabs from the available tabs
+      return availableTabs.slice(0, 4);
+    }
+    
+    // If we're on a non-core page, show all core tabs
+    return allTabs.filter(tab => coreTabs.includes(tab.path));
+  }, [currentPath]);
   
   // Define the menu items for the hamburger menu
   const menuItems = [
