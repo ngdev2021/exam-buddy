@@ -9,6 +9,7 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
   const [feedback, setFeedback] = useState("");
   const [showNext, setShowNext] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [answered, setAnswered] = useState(false);
 
   // Progress bar (simulate fast learning)
   const [progress, setProgress] = useState(0);
@@ -20,23 +21,38 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
     setBookmarked(false);
     setError("");
     setLoading(false);
+    setAnswered(false);
     setTimeout(() => setProgress(100), 200);
   }, [question]);
 
   // Handle answer selection
   const handleSelect = async (choice) => {
+    if (answered) return; // Prevent multiple selections
+    
     setSelected(choice);
+    setAnswered(true);
     setShowNext(false);
+    
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/evaluate-answer`, {
         userAnswer: choice,
         correctAnswer: questionData.answer,
         explanation: questionData.explanation
       });
+      
       setFeedback(res.data.feedback);
       setShowNext(true);
       onScore(res.data.isCorrect);
-    } catch {
+      
+      // For incorrect answers, don't auto-advance
+      if (res.data.isCorrect && onNext && typeof onNext === 'function') {
+        // Wait 2 seconds to show feedback before moving to next question
+        setTimeout(() => {
+          onNext();
+        }, 2000);
+      }
+    } catch (err) {
+      console.error('Error evaluating answer:', err);
       setFeedback("Could not evaluate answer.");
       setShowNext(true);
     }
@@ -101,10 +117,11 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
               
               return (
                 <button
-                  key={c}
+                  key={i}
                   className={optionClass}
-                  disabled={!!selected}
+                  disabled={answered}
                   onClick={() => handleSelect(c)}
+                  type="button"
                   tabIndex={0}
                   aria-label={`Answer ${String.fromCharCode(65 + i)}: ${c}`}
                 >
@@ -165,6 +182,7 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
           <button
             className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
             onClick={onNext}
+            type="button"
           >
             {onNext && typeof onNext === 'function' && onNext.name === 'handleNextQuestion' && questionData && questionData.isLastQuestion ? 'View Results' : 'Next Question'}
             <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -209,9 +227,10 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
             <button
               key={c}
               className={`${base} ${color}`}
-              disabled={!!selected}
+              disabled={answered}
               onClick={() => handleSelect(c)}
               tabIndex={0}
+              type="button"
               aria-label={`Answer ${String.fromCharCode(65 + i)}: ${c}`}
             >
               <div className="flex items-center">
@@ -244,6 +263,7 @@ export default function QuestionCard({ question, onScore, onNext, theme = 'defau
         <button
           className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 rounded-lg transition-colors duration-200"
           onClick={onNext}
+          type="button"
         >
           Next Question
         </button>
