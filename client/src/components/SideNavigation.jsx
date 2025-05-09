@@ -16,55 +16,44 @@ import {
   ArrowRightOnRectangleIcon
 } from "@heroicons/react/24/outline";
 
-export default function SideNavigation({ onCollapse, isMobile }) {
+export default function SideNavigation({ onCollapse, isMobile, isOpen, toggleSidebar, isCollapsed: propIsCollapsed }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { subjects, selectedSubject, setSelectedSubject } = useSubject();
   const { user, logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(propIsCollapsed || false);
   const [activeSection, setActiveSection] = useState('main');
   const [hoverItem, setHoverItem] = useState(null);
   
+  // Sync with parent component's collapsed state
+  useEffect(() => {
+    if (propIsCollapsed !== undefined) {
+      setIsCollapsed(propIsCollapsed);
+    }
+  }, [propIsCollapsed]);
+  
   // Notify parent component when collapse state changes
-  useEffect(() => {
+  const handleCollapseToggle = () => {
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
     if (onCollapse) {
-      onCollapse(isCollapsed);
-    }
-  }, [isCollapsed, onCollapse]);
-  
-  // Close sidebar when route changes on mobile
-  useEffect(() => {
-    if (window.innerWidth < 768) {
-      setIsOpen(false);
-    }
-  }, [location.pathname]);
-  
-  // Function to close sidebar on mobile
-  const handleNavClick = () => {
-    if (window.innerWidth < 768) {
-      setIsOpen(false);
+      onCollapse(newCollapsedState);
     }
   };
   
-  // Close sidebar when clicking outside on mobile
+  // Close sidebar when route changes on mobile
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const sidebar = document.getElementById('sidebar');
-      const toggleButton = document.getElementById('sidebar-toggle');
-      
-      if (sidebar && !sidebar.contains(event.target) && 
-          toggleButton && !toggleButton.contains(event.target) && 
-          isOpen && window.innerWidth < 768) {
-        setIsOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+    if (isMobile && toggleSidebar && isOpen) {
+      toggleSidebar();
+    }
+  }, [location.pathname, isMobile, toggleSidebar, isOpen]);
+  
+  // Function to close sidebar on mobile
+  const handleNavClick = () => {
+    if (isMobile && toggleSidebar && isOpen) {
+      toggleSidebar();
+    }
+  };
   
   // Handle logout - this is the only place we use navigate() directly
   const handleLogout = () => {
@@ -72,8 +61,8 @@ export default function SideNavigation({ onCollapse, isMobile }) {
     navigate('/login');
     
     // Close mobile sidebar after logout
-    if (window.innerWidth < 768) {
-      setIsOpen(false);
+    if (isMobile && toggleSidebar && isOpen) {
+      toggleSidebar();
     }
   };
 
@@ -91,59 +80,48 @@ export default function SideNavigation({ onCollapse, isMobile }) {
   
   return (
     <>
-      {/* Toggle button for mobile */}
-      <button 
-        id="sidebar-toggle"
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden bg-white dark:bg-gray-800 p-2 rounded-md shadow-md border border-gray-200 dark:border-gray-700 transition-transform duration-200 hover:scale-110 active:scale-90"
-        aria-label={isOpen ? "Close menu" : "Open menu"}
-      >
-        <div
-          className="transition-transform duration-200"
-          style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
-        >
-          {isOpen ? (
-            <XMarkIcon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-          ) : (
-            <Bars3Icon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-          )}
-        </div>
-      </button>
-      
       {/* Sidebar */}
       <div
         id="sidebar"
         className={`h-full bg-white dark:bg-gray-800 overflow-y-auto relative transition-all duration-500 ease-out ${isCollapsed ? 'w-[70px]' : 'w-full'}`}
       >
-        {/* Removed floating button - moved to header */}
-        
-        <div className="flex flex-col h-full w-full">
-          {/* Header with premium gradient */}
-          <div className={`flex items-center ${isCollapsed ? 'justify-center p-3' : 'justify-between p-4'} bg-gradient-to-r from-primary-600 to-purple-600 text-white`}>
-            <div className="flex items-center">
-              <SparklesIcon className={`w-6 h-6 ${isCollapsed ? '' : 'mr-2'}`} />
-              {!isCollapsed ? (
-                <span className="font-bold text-lg tracking-wide">ExamBuddy</span>
-              ) : null}
-            </div>
+        <div className="h-full flex flex-col">
+          {/* Logo and collapse button */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10">
+            <Link to="/" className="flex items-center space-x-3" onClick={handleNavClick}>
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                <AcademicCapIcon className="w-5 h-5" />
+              </div>
+              {!isCollapsed && (
+                <span className="text-xl font-semibold text-gray-800 dark:text-gray-100">ExamBuddy</span>
+              )}
+            </Link>
             
-            <div className="flex items-center space-x-2">
-              {!isCollapsed ? (
-                <ThemeToggle className="text-white" />
-              ) : null}
+            {/* Only show collapse button on desktop */}
+            {!isMobile && (
               <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
-                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                onClick={handleCollapseToggle}
+                className="p-1 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
-                <div 
-                  className="transition-all duration-300 flex items-center justify-center"
-                  style={{ transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}
-                >
-                  <ChevronLeftIcon className="w-4 h-4 text-white" />
-                </div>
+                {isCollapsed ? (
+                  <ChevronRightIcon className="w-5 h-5" />
+                ) : (
+                  <ChevronLeftIcon className="w-5 h-5" />
+                )}
               </button>
-            </div>
+            )}
+            
+            {/* Close button for mobile */}
+            {isMobile && (
+              <button
+                onClick={toggleSidebar}
+                className="p-1 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close menu"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            )}
           </div>
           
           {/* Navigation */}
