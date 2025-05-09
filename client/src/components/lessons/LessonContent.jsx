@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { FaChevronLeft, FaChevronRight, FaHighlighter, FaNoteSticky } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaHighlighter } from 'react-icons/fa';
+import { FaRegStickyNote } from 'react-icons/fa';
 
 const LessonContent = ({ lesson }) => {
   const [activeSection, setActiveSection] = useState(0);
@@ -136,7 +137,7 @@ const LessonContent = ({ lesson }) => {
           }}
           className="p-2 rounded-md text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-gray-700 flex items-center text-sm"
         >
-          <FaNoteSticky className="mr-1" />
+          <FaRegStickyNote className="mr-1" />
           <span className="hidden sm:inline">Add Note</span>
         </button>
       </div>
@@ -199,7 +200,7 @@ const LessonContent = ({ lesson }) => {
           {sectionNotes.length > 0 && (
             <div>
               <h5 className="text-md font-medium text-blue-600 dark:text-blue-400 flex items-center mb-2">
-                <FaNoteSticky className="mr-2" /> Notes
+                <FaRegStickyNote className="mr-2" /> Notes
               </h5>
               <div className="space-y-2">
                 {sectionNotes.map(note => (
