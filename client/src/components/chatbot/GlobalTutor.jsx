@@ -28,6 +28,7 @@ const GlobalTutor = () => {
   // Refs
   const chatContainerRef = useRef(null);
   const hasInitialized = useRef(false);
+  const hasGreeted = useRef(false);
   
   // Get the tutor name based on the selected subject
   const getTutorNameForSubject = (subjectName) => {
@@ -124,10 +125,10 @@ const GlobalTutor = () => {
     // Get the user's name from either preferences or localStorage
     const userName = preferences?.userName || localStorage.getItem('userName');
     
-    // Only send a greeting if this is the first render, we haven't greeted the user yet, and we have a name
-    if (firstRender.current && !hasGreetedUser && userName) {
+    // Only send a greeting if we haven't greeted the user yet and we have a name
+    if (!hasGreeted.current && !hasGreetedUser && userName) {
       console.log('Sending initial greeting to:', userName);
-      firstRender.current = false;
+      hasGreeted.current = true;
       
       // Generate a southern greeting
       const greeting = getSouthernGreeting();
