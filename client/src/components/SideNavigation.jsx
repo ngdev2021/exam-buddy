@@ -85,7 +85,7 @@ export default function SideNavigation({ onCollapse, isMobile, isOpen, toggleSid
       {/* Sidebar */}
       <div
         id="sidebar"
-        className={`h-full bg-white dark:bg-gray-800 overflow-y-auto relative transition-all duration-500 ease-out border-r border-gray-200 dark:border-gray-700 ${isCollapsed ? 'w-[70px]' : 'w-full'}`}
+        className={`h-full bg-white dark:bg-gray-800 overflow-y-auto relative transition-all duration-500 ease-out border-r border-gray-200 dark:border-gray-700 shadow-md ${isCollapsed ? 'w-[70px]' : 'w-full'}`}
       >
         <div className="h-full flex flex-col">
           {/* Logo and collapse button */}

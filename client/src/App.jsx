@@ -98,21 +98,29 @@ function App() {
             {/* Layout structure - different for mobile vs desktop */}
             <div className="flex h-screen w-full overflow-hidden">
               {/* Sidebar - always visible on desktop or when opened on mobile */}
-              {isAuthenticated && (
-                <aside 
-                  className={`${isAuthenticated ? 'block' : 'hidden'} transition-all duration-500 ease-out h-full ${isMobile ? 'fixed top-0 left-0 z-50' : 'relative'} ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'} ${isMobile ? 'shadow-xl' : ''}`}
-                  style={{
-                    width: sidebarCollapsed ? '70px' : '240px',
-                  }}
-                >
+              {isAuthenticated && !isMobile && (
+                <div className="h-full" style={{ width: sidebarCollapsed ? '70px' : '240px', flexShrink: 0 }}>
                   <SideNavigation 
                     isMobile={isMobile}
-                    isOpen={sidebarOpen}
+                    isOpen={true}
                     toggleSidebar={toggleSidebar}
                     isCollapsed={sidebarCollapsed}
                     onCollapse={handleSidebarCollapse}
                   />
-                </aside>
+                </div>
+              )}
+              
+              {/* Mobile sidebar - only visible when opened */}
+              {isAuthenticated && isMobile && sidebarOpen && (
+                <div className="fixed top-0 left-0 h-full z-50" style={{ width: '240px' }}>
+                  <SideNavigation 
+                    isMobile={isMobile}
+                    isOpen={sidebarOpen}
+                    toggleSidebar={toggleSidebar}
+                    isCollapsed={false}
+                    onCollapse={handleSidebarCollapse}
+                  />
+                </div>
               )}
               
               {/* Mobile overlay */}
@@ -125,9 +133,8 @@ function App() {
               )}
               
               {/* Main content wrapper */}
-              <div className="flex flex-col flex-1 h-full">
+              <div className="flex flex-col flex-1 h-full overflow-hidden">
                 {/* Desktop header - only visible on desktop */}
-                {console.log('Should show DesktopHeader?', !isMobile && isAuthenticated)}
                 {!isMobile && isAuthenticated && (
                   <div className="sticky top-0 z-40">
                     <DesktopHeader />
@@ -138,8 +145,6 @@ function App() {
                 <main 
                   className="flex-1 overflow-y-auto p-4" 
                   style={{ 
-                    marginLeft: '0',
-                    marginTop: '0',
                     paddingBottom: isMobile && isAuthenticated ? '70px' : '16px',
                   }}
                 >
