@@ -49,15 +49,12 @@ function App() {
   // Handle responsive layout and restore user preferences
   useEffect(() => {
     const handleResize = () => {
-      // Consider anything below 992px as mobile for better tablet support
+      // Desktop is >= 992px for better tablet support
       const mobileView = window.innerWidth < 992;
       setIsMobile(mobileView);
-      
-      // Auto-close sidebar when switching to mobile view
       if (mobileView) {
         setSidebarOpen(false);
       } else {
-        // Ensure sidebar is visible on desktop
         setSidebarOpen(true);
       }
     };
@@ -93,18 +90,13 @@ function App() {
             {isMobile && <MobileNavBar />}
             
             {/* Layout structure - different for mobile vs desktop */}
-            <div className="flex h-screen w-full overflow-hidden" style={{ minHeight: '100vh' }}>
+            <div className="flex h-screen w-full overflow-hidden">
               {/* Sidebar - always visible on desktop or when opened on mobile */}
               {isAuthenticated && (
                 <aside 
-                  className="h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out z-50"
-                  style={{ 
-                    width: sidebarCollapsed && !isMobile ? '70px' : '240px',
-                    transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
-                    position: isMobile ? 'fixed' : 'relative',
-                    height: '100%',
-                    boxShadow: isMobile && sidebarOpen ? '0 0 15px rgba(0,0,0,0.2)' : 'none',
-                    display: !isMobile ? 'block' : (sidebarOpen ? 'block' : 'none')
+                  className={`${isAuthenticated ? 'block' : 'hidden'} transition-all duration-500 ease-out h-full ${isMobile ? 'fixed top-0 left-0 z-50' : 'relative'} ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'} ${isMobile ? 'shadow-xl' : ''}`}
+                  style={{
+                    width: sidebarCollapsed ? '70px' : '240px',
                   }}
                 >
                   <SideNavigation 
@@ -137,10 +129,10 @@ function App() {
                 
                 {/* Main content area */}
                 <main 
-                  className={`flex-1 overflow-auto ${SPACING.container}`}
-                  style={{
-                    paddingTop: !isMobile && isAuthenticated ? '24px' : '16px',
-                    marginTop: !isMobile && isAuthenticated ? '64px' : '0',
+                  className="flex-1 overflow-y-auto p-4" 
+                  style={{ 
+                    marginLeft: '0',
+                    marginTop: '0',
                     paddingBottom: isMobile && isAuthenticated ? '70px' : '16px',
                   }}
                 >
