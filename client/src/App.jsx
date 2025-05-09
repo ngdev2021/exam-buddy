@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { BACKGROUNDS, SPACING, BORDERS, TEXT } from "./styles/theme";
 import SideNavigation from "./components/SideNavigation";
+import DesktopHeader from "./components/DesktopHeader";
 import VoiceCommandHandler from "./components/voice/VoiceCommandHandler";
 import GlobalTutor from "./components/chatbot/GlobalTutor";
 import HomePage from "./pages/HomePage";
@@ -88,6 +89,11 @@ function App() {
               {/* Mobile navigation for all pages when on mobile */}
               {isMobile && <MobileNavBar />}
               
+              {/* Desktop header - only visible on desktop */}
+              {!isMobile && isAuthenticated && (
+                <DesktopHeader sidebarWidth={sidebarCollapsed ? '70px' : '240px'} />
+              )}
+              
               {/* Mobile overlay */}
               {isMobile && sidebarOpen && isAuthenticated && (
                 <div 
@@ -128,7 +134,7 @@ function App() {
                   paddingTop: isMobile && isAuthenticated ? '64px' : '0',
                 }}
               >
-                <main className={`flex-1 pt-4 md:pt-16 pb-16 ${SPACING.container} overflow-y-auto`}
+                <main className={`flex-1 pt-4 ${!isMobile && isAuthenticated ? 'mt-16' : ''} pb-16 ${SPACING.container} overflow-y-auto`}
                   style={{
                     paddingBottom: isMobile && isAuthenticated ? '70px' : '0', // Add bottom padding on mobile for the tab bar
                   }}
