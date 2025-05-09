@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FaBook, FaCheck, FaLock, FaChevronRight } from 'react-icons/fa';
+import { TEXT, BACKGROUNDS, BORDERS } from '../../styles/theme';
 
 const ChaptersList = ({ chapters, topicName, subjectName }) => {
   const [expandedChapter, setExpandedChapter] = useState(null);

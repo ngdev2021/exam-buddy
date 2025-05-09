@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FaChevronLeft, FaChevronRight, FaHighlighter } from 'react-icons/fa';
 import { FaRegStickyNote } from 'react-icons/fa';
+import { TEXT, BACKGROUNDS, BORDERS } from '../../styles/theme';
 
 const LessonContent = ({ lesson }) => {
   const [activeSection, setActiveSection] = useState(0);
@@ -135,7 +136,7 @@ const LessonContent = ({ lesson }) => {
             setCurrentNoteSection(activeSection);
             setShowNotesPanel(true);
           }}
-          className="p-2 rounded-md text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-gray-700 flex items-center text-sm"
+          className="p-2 rounded-md text-primary-600 hover:bg-primary-100 dark:text-primary-400 dark:hover:bg-gray-700 flex items-center text-sm"
         >
           <FaRegStickyNote className="mr-1" />
           <span className="hidden sm:inline">Add Note</span>
@@ -243,7 +244,7 @@ const LessonContent = ({ lesson }) => {
               </button>
               <button
                 onClick={handleAddNote}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
               >
                 Save Note
               </button>

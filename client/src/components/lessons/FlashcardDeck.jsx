@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { FaCreditCard, FaArrowRight, FaArrowLeft, FaRedo, FaCheck, FaTimes } from 'react-icons/fa';
+import { TEXT, BACKGROUNDS, BORDERS } from '../../styles/theme';
 
 const FlashcardDeck = ({ flashcards, topicName, subjectName }) => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -152,7 +153,7 @@ const FlashcardDeck = ({ flashcards, topicName, subjectName }) => {
           </div>
           
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow text-center">
-            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+            <div className="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">
               {stats.percentKnown}%
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Mastery Level</div>
@@ -217,7 +218,7 @@ const FlashcardDeck = ({ flashcards, topicName, subjectName }) => {
       {/* Flashcard */}
       <div 
         className={`flashcard relative h-64 md:h-80 w-full rounded-xl shadow-lg cursor-pointer transition-all duration-500 transform ${
-          isFlipped ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800'
+          isFlipped ? 'bg-primary-50 dark:bg-primary-900/20' : 'bg-white dark:bg-gray-800'
         }`}
         onClick={flipCard}
         style={{ perspective: '1000px' }}

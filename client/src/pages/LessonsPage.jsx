@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSubject } from '../contexts/SubjectContext';
 import { getTopicsForSubject, getLesson, getLessonChapters, getFlashcardsForTopic } from '../services/tutorService';
 import { FaBook, FaSearch, FaChalkboardTeacher, FaListUl, FaCreditCard } from 'react-icons/fa';
+import { TEXT, BACKGROUNDS, BORDERS, GRADIENTS, BUTTONS } from '../styles/theme';
 import LessonContent from '../components/lessons/LessonContent';
 import ChaptersList from '../components/lessons/ChaptersList';
 import FlashcardDeck from '../components/lessons/FlashcardDeck';
