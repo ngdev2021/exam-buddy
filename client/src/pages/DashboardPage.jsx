@@ -86,21 +86,24 @@ export default function DashboardPage() {
 
   // Defensive: always treat stats as {} if null/undefined
   const safeStats = localStats && typeof localStats === 'object' ? localStats : {};
-  const allAnswered = topics.reduce((sum, t) => sum + (safeStats[t]?.total || 0), 0);
-  const allCorrect = topics.reduce((sum, t) => sum + (safeStats[t]?.correct || 0), 0);
+  const allAnswered = topics && Array.isArray(topics) ? 
+    topics.reduce((sum, t) => t ? sum + (safeStats[t]?.total || 0) : sum, 0) : 0;
+  const allCorrect = topics && Array.isArray(topics) ? 
+    topics.reduce((sum, t) => t ? sum + (safeStats[t]?.correct || 0) : sum, 0) : 0;
 
   // Find weakest topic(s)
-  const weakTopics = topics
-    .filter(t => (safeStats[t]?.total || 0) >= 5)
+  const weakTopics = topics && Array.isArray(topics) ? topics
+    .filter(t => t && (safeStats[t]?.total || 0) >= 5)
     .map(t => ({
       topic: t,
       pct: (safeStats[t]?.correct || 0) / (safeStats[t]?.total || 1) * 100
     }))
     .sort((a, b) => a.pct - b.pct)
-    .slice(0, 2);
+    .slice(0, 2) : [];
     
   // Prepare topic cards data
-  const topicCards = topics.map(topic => {
+  const topicCards = topics && Array.isArray(topics) ? topics.map(topic => {
+    if (!topic) return null; // Skip if topic is null/undefined
     const s = safeStats[topic] || { total: 0, correct: 0, incorrect: 0 };
     const pct = s.total ? Math.round((s.correct / s.total) * 100) : 0;
     const badge = getBadge(pct);
@@ -113,7 +116,7 @@ export default function DashboardPage() {
       badge,
       progressColor
     };
-  });
+  }).filter(Boolean) : []; // Filter out any null values
 
   function handleReset() {
     if (window.confirm("Are you sure you want to reset all your progress? This cannot be undone.")) {
