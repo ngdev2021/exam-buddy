@@ -28,8 +28,9 @@ const PRACTICE_LENGTHS = [5, 10, 25];
 export default function PracticePage() {
   const { user, token } = useAuth();
   const { selectedSubject } = useSubject();
-  // Get topics from the selected subject
-  const topics = selectedSubject.groups.flatMap(g => g.topics);
+  // Get topics from the selected subject with null checks
+  const topics = selectedSubject && selectedSubject.groups ? 
+    selectedSubject.groups.flatMap(g => g && g.topics ? g.topics : []) : [];
   const navigate = useNavigate();
   const [selectedTopic, setSelectedTopic] = useState("");
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -82,7 +83,7 @@ export default function PracticePage() {
       const requests = Array.from({ length: practiceLength }, () =>
         axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { 
           topic: selectedTopic,
-          subject: selectedSubject.name 
+          subject: selectedSubject?.name || 'Insurance' // Default to Insurance if name is undefined
         }).then(r => ({ ...r.data, topic: selectedTopic }))
       );
       const responses = await Promise.allSettled(requests);

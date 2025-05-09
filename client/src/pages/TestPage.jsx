@@ -15,8 +15,9 @@ export default function TestPage() {
   const { user, token } = useAuth();
   const { selectedSubject } = useSubject();
   const navigate = useNavigate();
-  // Get topics from the selected subject
-  const subjectTopics = selectedSubject.groups.flatMap(g => g.topics);
+  // Get topics from the selected subject with null checks
+  const subjectTopics = selectedSubject && selectedSubject.groups ? 
+    selectedSubject.groups.flatMap(g => g && g.topics ? g.topics : []) : [];
   const [selectedTopics, setSelectedTopics] = useState(subjectTopics);
   const [testLength, setTestLength] = useState(25);
   const [started, setStarted] = useState(false);
@@ -56,10 +57,11 @@ export default function TestPage() {
     setError("");
     try {
       const requests = Array.from({ length: testLength }, () => {
-        const topic = selectedTopics[Math.floor(Math.random() * selectedTopics.length)];
+        const topic = selectedTopics.length > 0 ? 
+          selectedTopics[Math.floor(Math.random() * selectedTopics.length)] : 'General';
         return axios.post(`${import.meta.env.VITE_API_URL}/api/generate-question`, { 
           topic,
-          subject: selectedSubject.name 
+          subject: selectedSubject?.name || 'Insurance' // Default to Insurance if name is undefined
         }).then(res => ({ ...res.data, topic }));
       });
       const responses = await Promise.allSettled(requests);
