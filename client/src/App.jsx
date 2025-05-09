@@ -84,8 +84,8 @@ function App() {
             <GlobalTutor />
             
             <div className="flex w-full h-screen overflow-hidden">
-              {/* Mobile navigation for authenticated users */}
-              {isMobile && isAuthenticated && <MobileNavBar />}
+              {/* Mobile navigation for all pages when on mobile */}
+              {isMobile && <MobileNavBar />}
               
               {/* Mobile overlay */}
               {isMobile && sidebarOpen && isAuthenticated && (

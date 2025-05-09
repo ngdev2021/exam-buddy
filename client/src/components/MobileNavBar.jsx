@@ -22,10 +22,13 @@ import {
 export default function MobileNavBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { subjects, selectedSubject, setSelectedSubject } = useSubject();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const [showSubjectMenu, setShowSubjectMenu] = useState(false);
+  
+  // Only access subject context if authenticated
+  const subjectContext = isAuthenticated ? useSubject() : { subjects: [], selectedSubject: null, setSelectedSubject: () => {} };
+  const { subjects, selectedSubject, setSelectedSubject } = subjectContext;
   
   // Define all possible navigation tabs
   const allTabs = [
@@ -99,59 +102,85 @@ export default function MobileNavBar() {
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Subject selector */}
-          <button 
-            onClick={() => setShowSubjectMenu(!showSubjectMenu)}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
-            aria-label="Select subject"
-          >
-            <span className="text-xs font-medium truncate max-w-[80px]">{selectedSubject?.name || 'Select Subject'}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          {/* Subject selector - only show when authenticated */}
+          {isAuthenticated && (
+            <button 
+              onClick={() => setShowSubjectMenu(!showSubjectMenu)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
+              aria-label="Select subject"
+            >
+              <span className="text-xs font-medium truncate max-w-[80px]">{selectedSubject?.name || 'Select Subject'}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          )}
           
           {/* Theme toggle */}
           <ThemeToggle />
           
-          {/* Hamburger menu button */}
-          <button 
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Menu"
-          >
-            {showMenu ? (
-              <XMarkIcon className="w-6 h-6" />
-            ) : (
-              <Bars3Icon className="w-6 h-6" />
-            )}
-          </button>
+          {/* Hamburger menu button - only show when authenticated */}
+          {isAuthenticated ? (
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-1.5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Menu"
+            >
+              {showMenu ? (
+                <XMarkIcon className="w-6 h-6" />
+              ) : (
+                <Bars3Icon className="w-6 h-6" />
+              )}
+            </button>
+          ) : (
+            // Login/Register buttons for non-authenticated users
+            <div className="flex items-center gap-2">
+              {location.pathname !== '/login' && (
+                <Link 
+                  to="/login"
+                  className="px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-md transition-colors"
+                >
+                  Login
+                </Link>
+              )}
+              {location.pathname !== '/register' && (
+                <Link 
+                  to="/register"
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 rounded-md transition-colors"
+                >
+                  Register
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </header>
       
-      {/* Bottom navigation bar with 4 main tabs */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg flex justify-around py-1.5 z-50 md:hidden border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
-        {mainTabs.map(item => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex flex-col items-center text-xs font-medium px-2 py-1.5 transition-colors ${isActive(item.path) 
-              ? "text-primary-600 dark:text-primary-400" 
-              : "text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-300"}`}
-            aria-label={item.label}
-          >
-            <div className={`p-1.5 rounded-full ${isActive(item.path) ? 'bg-primary-100 dark:bg-primary-900/30' : ''}`}>
-              {React.cloneElement(item.icon, { 
-                className: `w-5 h-5 ${isActive(item.path) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}` 
-              })}
-            </div>
-            <span className="mt-0.5">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+      {/* Bottom navigation bar - only show when authenticated */}
+      {isAuthenticated && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg flex justify-around py-1.5 z-50 md:hidden border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
+          {mainTabs.map(item => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center text-xs font-medium px-2 py-1.5 transition-colors ${isActive(item.path) 
+                ? "text-primary-600 dark:text-primary-400" 
+                : "text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-300"}`}
+              aria-label={item.label}
+            >
+              <div className={`p-1.5 rounded-full ${isActive(item.path) ? 'bg-primary-100 dark:bg-primary-900/30' : ''}`}>
+                {React.cloneElement(item.icon, { 
+                  className: `w-5 h-5 ${isActive(item.path) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'}` 
+                })}
+              </div>
+              <span className="mt-0.5">{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+      )}
       
-      {/* Full-screen menu overlay */}
-      {showMenu && (
+      {/* Full-screen menu overlay - only show when authenticated */}
+      {isAuthenticated && showMenu && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden animate-fade-in">
           <div className="absolute top-16 left-0 right-0 bottom-16 bg-white dark:bg-gray-800 overflow-y-auto">
             {/* User profile section */}
@@ -201,8 +230,8 @@ export default function MobileNavBar() {
         </div>
       )}
       
-      {/* Subject selection dropdown */}
-      {showSubjectMenu && (
+      {/* Subject selection dropdown - only show when authenticated */}
+      {isAuthenticated && showSubjectMenu && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden animate-fade-in" onClick={() => setShowSubjectMenu(false)}>
           <div className="absolute top-16 right-0 left-0 bg-white dark:bg-gray-800 shadow-lg py-1 z-50 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200" onClick={e => e.stopPropagation()}>
             <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
