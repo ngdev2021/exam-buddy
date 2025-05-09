@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useSubject } from '../../contexts/SubjectContext';
 import { FiSend, FiX, FiMessageSquare } from 'react-icons/fi';
 import { BsThreeDots } from 'react-icons/bs';
-import { FaHeart } from 'react-icons/fa';
+import { FaHeart, FaRobot } from 'react-icons/fa';
 
 const GlobalTutor = () => {
   // State for the chat interface
@@ -14,10 +14,9 @@ const GlobalTutor = () => {
   const [nameInput, setNameInput] = useState('');
   
   // Initialize state from localStorage only once during component definition
-  // This prevents state updates during render cycles
   const initialHasGreeted = localStorage.getItem('hasGreetedUser') === 'true';
   const [hasGreetedUser, setHasGreetedUser] = useState(initialHasGreeted);
-  const [showNamePrompt, setShowNamePrompt] = useState(false); // Initialize to false, set only once if needed
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
   
   // Context hooks
   const { messages, sendMessage, isTyping } = useChatbot();
@@ -105,13 +104,9 @@ const GlobalTutor = () => {
     if (lastMessage && lastMessage.isSystemMessage && lastMessage.isTopicChange) {
       console.log('Topic change detected:', lastMessage);
       
-      // Update the chat with a tutor message about the new topic
-      const topicMessage = `I see you're now studying ${lastMessage.topic} in ${lastMessage.subject}. That's a great topic! Feel free to ask me any questions about it, sugar.`;
-      
-      // Send a tutor response about the topic change
-      sendMessage('', {
-        isSystemMessage: true,
-        text: topicMessage,
+      // Send a tutor message acknowledging the topic change
+      sendMessage({
+        text: `Let's talk about ${lastMessage.topic} in ${lastMessage.subject}. What would you like to know?`,
         sender: 'tutor',
         timestamp: new Date().toISOString(),
         topic: lastMessage.topic,
@@ -126,27 +121,27 @@ const GlobalTutor = () => {
     const userName = preferences?.userName || localStorage.getItem('userName');
     
     // Only send a greeting if we haven't greeted the user yet and we have a name
-    if (!hasGreeted.current && !hasGreetedUser && userName) {
-      console.log('Sending initial greeting to:', userName);
+    if (!hasGreeted.current && userName && !hasGreetedUser) {
       hasGreeted.current = true;
       
-      // Generate a southern greeting
+      // Determine the greeting based on the time of day
       const greeting = getSouthernGreeting();
-      const subjectInfo = selectedSubject ? ` I see you're studying ${selectedSubject.name}.` : '';
       
-      // Send an initial greeting
-      sendMessage('', {
-        isSystemMessage: true,
-        text: `${greeting} ${userName}! I'm ${tutorName}, your personal study buddy.${subjectInfo} I'm here to help with any questions you might have. Just click this chat icon whenever you need me!`,
+      // Send the personalized greeting
+      const subjectText = selectedSubject?.name ? ` I see you're studying ${selectedSubject.name}.` : '';
+      
+      sendMessage({
+        text: `${greeting} ${userName}!${subjectText} How can I help you today?`,
         sender: 'tutor',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isGreeting: true
       });
       
-      // Mark that we've greeted the user and save to localStorage
+      // Mark that we've greeted the user
       setHasGreetedUser(true);
       localStorage.setItem('hasGreetedUser', 'true');
       
-      // Make sure the name is saved in both preferences and localStorage
+      // Make sure the name is synced between localStorage and preferences
       if (!preferences?.userName && userName) {
         setUserName(userName);
       }
@@ -160,63 +155,70 @@ const GlobalTutor = () => {
   const handleNameSubmit = () => {
     if (!nameInput.trim()) return;
     
-    console.log('Submitting name:', nameInput);
+    // Update the name in both localStorage and preferences
+    localStorage.setItem('userName', nameInput);
+    setUserName(nameInput);
     
-    // Save the user's name in preferences
-    setUserName(nameInput.trim());
+    // Hide the name prompt
+    setShowNamePrompt(false);
     
-    // Also save directly to localStorage for persistence
-    localStorage.setItem('userName', nameInput.trim());
-    
-    // Send a greeting message
+    // Send a greeting with the new name
     const greeting = getSouthernGreeting();
+    const subjectText = selectedSubject?.name ? ` I see you're studying ${selectedSubject.name}.` : '';
     
-    // Send a welcome message
-    sendMessage('', {
-      isSystemMessage: true,
-      text: `${greeting} ${nameInput.trim()}! I'm ${tutorName}, your personal study buddy. I'm here to help with any questions you might have. Just click this chat icon whenever you need me!`,
+    sendMessage({
+      text: `${greeting} ${nameInput}!${subjectText} How can I help you today?`,
       sender: 'tutor',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      isGreeting: true
     });
     
-    // Hide the name prompt and mark that we've greeted the user
-    setShowNamePrompt(false);
-    setNameInput('');
+    // Mark that we've greeted the user
     setHasGreetedUser(true);
     localStorage.setItem('hasGreetedUser', 'true');
+    
+    // Clear the input
+    setNameInput('');
   };
   
   // Handle sending a message
   const handleSendMessage = () => {
     if (!messageInput.trim()) return;
     
-    // Send the message
-    sendMessage(messageInput, {
-      subject: selectedSubject?.name || 'General',
-      topic: 'General',
-      role: 'tutor',
-      personality: 'southern',
-      userName: preferences?.userName
+    // Send the user message
+    sendMessage({
+      text: messageInput,
+      sender: 'user',
+      timestamp: new Date().toISOString(),
+      topic: selectedSubject?.currentTopic,
+      subject: selectedSubject?.name
     });
     
-    // Clear the input field
+    // Clear the input
     setMessageInput('');
   };
   
   // Toggle the chat panel
   const toggleChat = () => {
-    console.log('Toggling chat:', !isOpen);
-    setIsOpen(!isOpen);
+    setIsOpen(prev => {
+      // If we're opening the chat and the user hasn't been greeted yet,
+      // check if we need to show the name prompt
+      if (!prev && !hasGreetedUser && !preferences?.userName && !localStorage.getItem('userName')) {
+        setShowNamePrompt(true);
+      }
+      
+      return !prev;
+    });
   };
   
   return (
-    <div className="global-tutor-container">
+    <div className="fixed bottom-20 md:bottom-4 right-4 z-50">
       {/* Name Prompt Modal */}
       {showNamePrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
-              Howdy there!
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full m-4">
+            <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center">
+              <FaHeart className="mr-2 text-pink-500" /> Howdy there!
             </h3>
             <p className="mb-4 text-gray-600 dark:text-gray-300">
               I'd love to know your name so I can make our conversations more personal, sugar! What should I call you?
@@ -232,7 +234,7 @@ const GlobalTutor = () => {
               />
               <button
                 onClick={handleNameSubmit}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition-colors duration-200"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-r-lg transition-colors duration-200"
               >
                 Nice to meet you!
               </button>
@@ -241,47 +243,34 @@ const GlobalTutor = () => {
         </div>
       )}
       
-      {/* Floating chat button */}
-      <button
-        onClick={toggleChat}
-        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg z-50 transition-all duration-300 transform hover:scale-110"
-        aria-label="Chat with tutor"
-      >
-        {isOpen ? <FiX size={24} /> : <FiMessageSquare size={24} />}
-      </button>
+      {/* Chat button */}
+      {!isOpen && (
+        <button
+          onClick={toggleChat}
+          className="bg-primary-600 hover:bg-primary-700 w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white transition-colors duration-200"
+          aria-label="Open chat"
+        >
+          <FiMessageSquare size={24} />
+        </button>
+      )}
       
       {/* Chat panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-80 md:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-40 flex flex-col max-h-[70vh] border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col w-80 md:w-96 h-[450px] md:h-[500px] border border-gray-200 dark:border-gray-700 max-h-[80vh]">
           {/* Chat header */}
-          <div className="bg-blue-600 text-white px-4 py-3 rounded-t-lg flex justify-between items-center">
+          <div className="bg-primary-600 text-white px-4 py-3 flex justify-between items-center rounded-t-lg">
             <div className="flex items-center">
-              <FaHeart className="text-pink-300 mr-2" />
-              <span>Chat with {tutorName}</span>
+              <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-500 mr-2">
+                {tutorName?.charAt(0) || 'T'}
+              </div>
+              <div>
+                <h3 className="font-medium">{tutorName}</h3>
+                <p className="text-xs text-blue-200">Your AI Study Buddy</p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to clear all chat history?')) {
-                    // Clear chat history using the ChatbotContext
-                    sendMessage('', {
-                      isSystemMessage: true,
-                      isClearChat: true
-                    });
-                    // Also clear localStorage chat data
-                    localStorage.removeItem('chatMessages');
-                    localStorage.removeItem('chatHistory');
-                    localStorage.removeItem('processedMessageIds');
-                  }
-                }} 
-                className="text-white hover:text-gray-200 text-xs bg-red-500 hover:bg-red-600 px-2 py-1 rounded"
-              >
-                Clear Chat
-              </button>
-              <button onClick={toggleChat} className="text-white hover:text-gray-200 ml-2">
-                <FiX size={20} />
-              </button>
-            </div>
+            <button onClick={toggleChat} className="text-white hover:text-gray-200">
+              <FiX size={20} />
+            </button>
           </div>
           
           {/* Chat messages */}

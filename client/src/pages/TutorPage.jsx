@@ -3,7 +3,7 @@ import { useChatbot } from '../context/ChatbotContext';
 import { useSubject } from '../contexts/SubjectContext';
 import SubjectTutor from '../components/chatbot/SubjectTutor';
 import { getTopicsForSubject } from '../services/tutorService';
-import { FaHeart } from 'react-icons/fa';
+import { FaHeart, FaSearch, FaBookOpen, FaLightbulb, FaQuestion } from 'react-icons/fa';
 
 const TutorPage = () => {
   const [selectedTopic, setSelectedTopic] = useState('');
@@ -48,59 +48,72 @@ const TutorPage = () => {
   };
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">{selectedSubject?.name || 'Subject'} Tutor</h1>
+    <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">  {/* Added bottom padding for mobile */}
+      <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-center">{selectedSubject?.name || 'Subject'} Tutor</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Left sidebar - Topic selection */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-          <h2 className="text-xl font-semibold mb-4">Choose a {selectedSubject?.name || 'Subject'} Topic</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold mb-4 flex items-center">
+            <FaBookOpen className="text-primary-600 dark:text-primary-400 mr-2" />
+            Choose a Topic
+          </h2>
           
+          {/* Search box for topics */}
+          <div className="relative mb-4">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={customTopic}
+              onChange={handleCustomTopicChange}
+              placeholder="Search or enter a topic..."
+              className="w-full pl-10 p-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          
+          {/* Popular topics with visual indicators */}
           <div className="mb-6">
-            <h3 className="font-medium mb-2">Popular Topics</h3>
-            <div className="space-y-2">
+            <h3 className="font-medium mb-2 text-gray-700 dark:text-gray-300 flex items-center">
+              <FaLightbulb className="text-yellow-500 mr-2" />
+              Popular Topics
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-2">
               {popularTopics.map((topic) => (
                 <button
                   key={topic}
                   onClick={() => handleTopicSelect(topic)}
-                  className={`block w-full text-left px-3 py-2 rounded-md ${
+                  className={`flex items-center text-left px-3 py-2 rounded-md transition-all ${
                     selectedTopic === topic
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300 border-l-4 border-primary-500'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 border-l-4 border-transparent'
                   }`}
                 >
-                  {topic}
+                  <span className="truncate">{topic}</span>
                 </button>
               ))}
             </div>
           </div>
           
-          <div>
-            <h3 className="font-medium mb-2">Custom Topic</h3>
-            <input
-              type="text"
-              value={customTopic}
-              onChange={handleCustomTopicChange}
-              placeholder="Enter any insurance topic..."
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md mb-3 dark:bg-gray-700 dark:text-white"
-            />
-            <button
-              onClick={handleAskAboutTopic}
-              disabled={!selectedTopic && !customTopic}
-              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              Ask About This Topic
-            </button>
-          </div>
+          {/* Ask button */}
+          <button
+            onClick={handleAskAboutTopic}
+            disabled={!selectedTopic && !customTopic}
+            className="w-full bg-primary-600 text-white py-3 rounded-md hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center font-medium"
+          >
+            <FaQuestion className="mr-2" />
+            {selectedTopic || customTopic ? `Learn About ${selectedTopic || customTopic}` : 'Select a Topic First'}
+          </button>
         </div>
         
         {/* Main content - Tutor */}
         <div className="md:col-span-2">
           <SubjectTutor topic={selectedTopic || customTopic} />
           
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <span className="text-pink-500 mr-2">❤</span>
+              <FaHeart className="text-pink-500 mr-2" />
               {selectedSubject?.name || 'Exam'} Study Tips from Miss Sally
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4 italic border-l-4 border-pink-300 pl-3">
