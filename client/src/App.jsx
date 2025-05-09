@@ -92,8 +92,8 @@ function App() {
             <GlobalTutor />
             
             {/* Mobile navigation for all pages when on mobile */}
-            {isMobile && <MobileNavBar />}
-            {console.log('Should show MobileNavBar?', isMobile)}
+            {isMobile && isAuthenticated && <MobileNavBar />}
+            {console.log('Should show MobileNavBar?', isMobile && isAuthenticated)}
             
             {/* Layout structure - different for mobile vs desktop */}
             <div className="flex h-screen w-full overflow-hidden">

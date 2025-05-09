@@ -349,6 +349,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("user");
   };
 
+  // Explicitly define isAuthenticated as a boolean
+  const isAuthenticated = !!user && !!token && !isTokenExpired();
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -357,6 +360,7 @@ export function AuthProvider({ children }) {
       register,
       logout, 
       loading,
+      isAuthenticated, // Add the explicit boolean property
       isTokenExpired,
       verifyToken,
       handleAuthError,
