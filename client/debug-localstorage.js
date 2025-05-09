@@ -1,0 +1,1 @@
+console.log('localStorage contents:', Object.keys(localStorage)); console.log('userName in localStorage:', localStorage.getItem('userName')); console.log('global_preferences:', localStorage.getItem('global_preferences'));

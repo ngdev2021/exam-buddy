@@ -62,10 +62,12 @@ function App() {
             <div className="flex w-full h-screen overflow-hidden">
               {/* Sidebar - dynamic width based on collapse state */}
               <aside 
-                className={`h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out`}
+                className={`h-full flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-y-auto transition-all duration-500 ease-out z-30 ${isMobile ? 'fixed' : 'relative'}`}
                 style={{ 
-                  width: sidebarCollapsed ? '70px' : (isMobile ? '100%' : '280px'),
-                  transition: 'width 0.5s cubic-bezier(0.19, 1.0, 0.22, 1.0)'
+                  width: sidebarCollapsed ? '70px' : (isMobile ? '85%' : '280px'),
+                  transform: isMobile && !isAuthenticated ? 'translateX(-100%)' : 'translateX(0)',
+                  transition: 'all 0.3s cubic-bezier(0.19, 1.0, 0.22, 1.0)',
+                  boxShadow: isMobile ? '0 0 15px rgba(0,0,0,0.1)' : 'none'
                 }}
               >
                 <SideNavigation onCollapse={handleSidebarCollapse} isMobile={isMobile} />
@@ -75,11 +77,15 @@ function App() {
               <div
                 className={`flex-1 flex flex-col min-h-screen ${BACKGROUNDS.main} overflow-y-auto`}
                 style={{
-                  transition: 'all 0.5s cubic-bezier(0.19, 1.0, 0.22, 1.0)',
-                  minHeight: '100vh'
+                  transition: 'all 0.3s cubic-bezier(0.19, 1.0, 0.22, 1.0)',
+                  minHeight: '100vh',
+                  width: '100%',
+                  marginLeft: isMobile ? '0' : (sidebarCollapsed ? '70px' : '280px'),
+                  position: isMobile ? 'absolute' : 'relative',
+                  paddingBottom: isMobile ? '70px' : '0'
                 }}
               >
-                <main className={`flex-1 pt-16 pb-16 ${SPACING.container}`}>
+                <main className={`flex-1 pt-4 md:pt-16 pb-16 ${SPACING.container}`}>
                   <Routes>
                     {/* Public routes */}
                     <Route path="login" element={<LoginPage />} />
