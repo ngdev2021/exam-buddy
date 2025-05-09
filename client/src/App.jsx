@@ -49,7 +49,8 @@ function App() {
   // Handle responsive layout and restore user preferences
   useEffect(() => {
     const handleResize = () => {
-      const mobileView = window.innerWidth < 768;
+      // Consider anything below 992px as mobile for better tablet support
+      const mobileView = window.innerWidth < 992;
       setIsMobile(mobileView);
       
       // Auto-close sidebar when switching to mobile view
@@ -92,7 +93,7 @@ function App() {
             {isMobile && <MobileNavBar />}
             
             {/* Layout structure - different for mobile vs desktop */}
-            <div className="flex h-screen w-full overflow-hidden">
+            <div className="flex h-screen w-full overflow-hidden" style={{ minHeight: '100vh' }}>
               {/* Sidebar - always visible on desktop or when opened on mobile */}
               {isAuthenticated && (
                 <aside 
@@ -129,9 +130,9 @@ function App() {
               <div className="flex flex-col flex-1 h-full">
                 {/* Desktop header - only visible on desktop */}
                 {!isMobile && isAuthenticated && (
-                  <header className="fixed top-0 right-0 z-40" style={{ left: sidebarCollapsed ? '70px' : '240px' }}>
+                  <div className="sticky top-0 z-40">
                     <DesktopHeader />
-                  </header>
+                  </div>
                 )}
                 
                 {/* Main content area */}
