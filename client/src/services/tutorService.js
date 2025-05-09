@@ -646,6 +646,180 @@ export const getLesson = (subjectName, topic) => {
 };
 
 /**
+ * Get chapters for a specific topic lesson
+ * @param {string} subjectName - Name of the subject
+ * @param {string} topic - The topic to get chapters for
+ * @returns {Array} Array of chapter objects with sections
+ */
+export const getLessonChapters = (subjectName, topic) => {
+  if (!topic) return [];
+  
+  const normalizedTopic = topic.toLowerCase().trim();
+  
+  // Try to get the lesson content first
+  const lesson = getLessonContent(normalizedTopic, subjectName);
+  
+  // If the lesson has chapters defined, return them
+  if (lesson && lesson.chapters && lesson.chapters.length > 0) {
+    return lesson.chapters;
+  }
+  
+  // Otherwise, generate chapters based on lesson sections
+  if (lesson && lesson.sections && lesson.sections.length > 0) {
+    // Convert sections to chapters format
+    return [
+      {
+        id: 'intro',
+        title: 'Introduction',
+        description: `Basic introduction to ${topic}`,
+        sections: lesson.sections.slice(0, Math.min(3, lesson.sections.length)).map((section, index) => ({
+          id: `intro-${index + 1}`,
+          title: section.title,
+          completed: false
+        })),
+        progress: 0
+      },
+      {
+        id: 'fundamentals',
+        title: 'Fundamentals',
+        description: `Core principles of ${topic}`,
+        sections: lesson.sections.slice(Math.min(3, lesson.sections.length)).map((section, index) => ({
+          id: `fund-${index + 1}`,
+          title: section.title,
+          completed: false
+        })),
+        progress: 0,
+        locked: lesson.sections.length > 3 // Lock if there are more than 3 sections
+      }
+    ];
+  }
+  
+  // Default chapters if no lesson or sections found
+  return [
+    {
+      id: 'intro',
+      title: 'Introduction',
+      description: `Basic introduction to ${topic}`,
+      sections: [
+        { id: 'intro-1', title: 'What is ' + topic, completed: false },
+        { id: 'intro-2', title: 'Key Concepts', completed: false },
+        { id: 'intro-3', title: 'Historical Context', completed: false }
+      ],
+      progress: 0
+    },
+    {
+      id: 'fundamentals',
+      title: 'Fundamentals',
+      description: `Core principles of ${topic}`,
+      sections: [
+        { id: 'fund-1', title: 'Basic Principles', completed: false },
+        { id: 'fund-2', title: 'Common Applications', completed: false },
+        { id: 'fund-3', title: 'Problem Solving Techniques', completed: false }
+      ],
+      progress: 0,
+      locked: true
+    },
+    {
+      id: 'advanced',
+      title: 'Advanced Topics',
+      description: `In-depth exploration of ${topic}`,
+      sections: [
+        { id: 'adv-1', title: 'Complex Scenarios', completed: false },
+        { id: 'adv-2', title: 'Case Studies', completed: false },
+        { id: 'adv-3', title: 'Current Research', completed: false }
+      ],
+      progress: 0,
+      locked: true
+    }
+  ];
+};
+
+/**
+ * Get flashcards for a specific topic
+ * @param {string} subjectName - Name of the subject
+ * @param {string} topic - The topic to get flashcards for
+ * @returns {Array} Array of flashcard objects
+ */
+export const getFlashcardsForTopic = (subjectName, topic) => {
+  if (!topic) return [];
+  
+  const normalizedTopic = topic.toLowerCase().trim();
+  
+  // Try to get the lesson content first
+  const lesson = getLessonContent(normalizedTopic, subjectName);
+  
+  // If the lesson has flashcards defined, return them
+  if (lesson && lesson.flashcards && lesson.flashcards.length > 0) {
+    return lesson.flashcards;
+  }
+  
+  // If the lesson has a quiz, convert quiz questions to flashcards
+  if (lesson && lesson.quiz && lesson.quiz.length > 0) {
+    return lesson.quiz.map((question, index) => ({
+      id: `card-${index + 1}`,
+      question: question.question,
+      answer: question.options[question.answer] + 
+        (question.explanation ? `\n\nExplanation: ${question.explanation}` : '')
+    }));
+  }
+  
+  // Otherwise generate flashcards based on lesson sections
+  if (lesson && lesson.sections && lesson.sections.length > 0) {
+    // Extract key terms and concepts from sections
+    const flashcards = [];
+    
+    // Title flashcard
+    flashcards.push({
+      id: 'card-title',
+      question: `What is ${topic}?`,
+      answer: lesson.description || `${topic} is a key concept in ${subjectName} that involves understanding fundamental principles and applications.`
+    });
+    
+    // Section-based flashcards
+    lesson.sections.forEach((section, sIndex) => {
+      flashcards.push({
+        id: `card-section-${sIndex}`,
+        question: `What are the key points about "${section.title}"?`,
+        answer: Array.isArray(section.content) 
+          ? section.content.join('\n\n')
+          : section.content
+      });
+    });
+    
+    return flashcards;
+  }
+  
+  // Default flashcards if no lesson or sections found
+  return [
+    {
+      id: 'card-1',
+      question: `What is ${topic}?`,
+      answer: `${topic} is a key concept in ${subjectName} that involves understanding fundamental principles and applications.`
+    },
+    {
+      id: 'card-2',
+      question: `What are the main components of ${topic}?`,
+      answer: `The main components include theoretical frameworks, practical applications, and historical context.`
+    },
+    {
+      id: 'card-3',
+      question: `How is ${topic} applied in real-world scenarios?`,
+      answer: `${topic} is applied through various methodologies including analysis, synthesis, and evaluation of relevant data and concepts.`
+    },
+    {
+      id: 'card-4',
+      question: `What are common misconceptions about ${topic}?`,
+      answer: `Common misconceptions include oversimplification, misattribution of causes and effects, and failure to consider contextual factors.`
+    },
+    {
+      id: 'card-5',
+      question: `How has ${topic} evolved over time?`,
+      answer: `${topic} has evolved through various theoretical paradigms, influenced by research findings, technological advancements, and changing societal needs.`
+    }
+  ];
+};
+
+/**
  * Get quiz for a specific topic - alias for generateQuizForTopic for compatibility
  * @param {string} subjectName - Name of the subject
  * @param {string} topic - The topic to get quiz for

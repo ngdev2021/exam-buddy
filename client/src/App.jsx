@@ -19,6 +19,7 @@ import VoiceFlashcardPage from "./pages/VoiceFlashcardPage";
 import VoiceExamPage from "./pages/VoiceExamPage";
 import VoiceSettingsPage from "./pages/VoiceSettingsPage";
 import TutorPage from "./pages/TutorPage";
+import LessonsPage from "./pages/LessonsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 import MobileNavBar from "./components/MobileNavBar"; // Import MobileNavBar
@@ -195,6 +196,11 @@ function App() {
                     <Route path="tutor" element={
                       <ProtectedRoute>
                         <TutorPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="lessons" element={
+                      <ProtectedRoute>
+                        <LessonsPage />
                       </ProtectedRoute>
                     } />
                     

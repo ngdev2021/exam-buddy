@@ -17,7 +17,8 @@ import {
   ArrowRightOnRectangleIcon,
   BeakerIcon,
   ChatBubbleLeftRightIcon,
-  CalculatorIcon
+  CalculatorIcon,
+  BookOpenIcon
 } from "@heroicons/react/24/outline";
 
 export default function MobileNavBar() {
@@ -41,6 +42,7 @@ export default function MobileNavBar() {
     { path: '/test', label: 'Test', icon: <ClipboardDocumentCheckIcon className="w-6 h-6" /> },
     { path: '/dashboard', label: 'Stats', icon: <ChartBarIcon className="w-6 h-6" /> },
     { path: '/tutor', label: 'Tutor', icon: <ChatBubbleLeftRightIcon className="w-6 h-6" /> },
+    { path: '/lessons', label: 'Lessons', icon: <BookOpenIcon className="w-6 h-6" /> },
     { path: '/calculator', label: 'Calc', icon: <CalculatorIcon className="w-6 h-6" /> }
   ];
   
@@ -74,6 +76,7 @@ export default function MobileNavBar() {
     { path: '/settings', label: 'Settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'text-gray-500' },
     { path: '/calculator', label: 'Calculator', icon: <CalculatorIcon className="w-5 h-5" />, color: 'text-green-500' },
     { path: '/tutor', label: 'AI Tutor', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" />, color: 'text-purple-500' },
+    { path: '/lessons', label: 'Lessons', icon: <BookOpenIcon className="w-5 h-5" />, color: 'text-indigo-500' },
     { path: '/voice-demo', label: 'Voice Tools', icon: <BeakerIcon className="w-5 h-5" />, color: 'text-orange-500' },
   ];
   
