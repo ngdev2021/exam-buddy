@@ -38,7 +38,7 @@ export default function HomePage() {
   const avgSession = total ? Math.max(10, Math.round(total / 5)) : 0;
 
   return (
-    <div className={`min-h-[90vh] flex flex-col items-center justify-center ${GRADIENTS.subtlePrimary} px-4 py-8 transition-colors duration-200`}>
+    <div className={`flex flex-col items-center justify-center ${GRADIENTS.subtlePrimary} px-4 py-8 transition-colors duration-200`}>
       {/* App-style Greeting */}
       <div className="w-full max-w-3xl mx-auto">
         <h1 className={`${TEXT.title} text-3xl sm:text-4xl text-primary-700 dark:text-primary-400 mb-1`}>Welcome to ExamBuddy</h1>

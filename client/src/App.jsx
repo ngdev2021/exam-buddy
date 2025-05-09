@@ -55,6 +55,9 @@ function App() {
       // Auto-close sidebar when switching to mobile view
       if (mobileView) {
         setSidebarOpen(false);
+      } else {
+        // Ensure sidebar is visible on desktop
+        setSidebarOpen(true);
       }
     };
     
@@ -99,7 +102,8 @@ function App() {
                     transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
                     position: isMobile ? 'fixed' : 'relative',
                     height: '100%',
-                    boxShadow: isMobile && sidebarOpen ? '0 0 15px rgba(0,0,0,0.2)' : 'none'
+                    boxShadow: isMobile && sidebarOpen ? '0 0 15px rgba(0,0,0,0.2)' : 'none',
+                    display: !isMobile ? 'block' : (sidebarOpen ? 'block' : 'none')
                   }}
                 >
                   <SideNavigation 
