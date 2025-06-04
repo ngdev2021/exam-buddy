@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { BACKGROUNDS, BORDERS, BUTTONS, SHADOWS, TEXT, ANIMATIONS } from '../../styles/theme';
+import { BACKGROUNDS, BORDERS, BUTTONS, SHADOWS, TEXT, ANIMATIONS, GRADIENTS } from '../../styles/theme';
 
 export default function RegisterForm() {
   const { register: registerUser } = useAuth();
