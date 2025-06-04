@@ -20,7 +20,7 @@ export default function RegisterForm() {
   const onSubmit = async (data) => {
   console.log('RegisterForm submission:', data);
     try {
-      await registerUser(data.email, data.password);
+      await registerUser(data.name, data.email, data.password);
       // Navigate to home after successful registration
       navigate('/');
     } catch (err) {
@@ -43,6 +43,25 @@ export default function RegisterForm() {
         </div>
       )}
       
+      {/* Full Name field */}
+      <div className="mb-4">
+        <label className={`block ${TEXT.small} mb-1 font-medium text-gray-700 dark:text-gray-300`}>Full Name</label>
+        <input
+          type="text"
+          className={`w-full ${BORDERS.light} ${errors.name ? 'border-red-500 dark:border-red-400' : 'focus:border-primary-500 dark:focus:border-primary-400'} p-3 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-400/20 ${ANIMATIONS.hover}`}
+          placeholder="Enter your full name"
+          {...register('name', { 
+            required: 'Full name is required',
+            minLength: {
+              value: 2,
+              message: 'Name must be at least 2 characters'
+            }
+          })}
+        />
+        {errors.name && (
+          <p className="text-red-500 dark:text-red-400 text-sm mt-1">{errors.name.message}</p>
+        )}
+      </div>
       {/* Email field */}
       <div className="mb-4">
         <label className={`block ${TEXT.small} mb-1 font-medium text-gray-700 dark:text-gray-300`}>Email</label>
