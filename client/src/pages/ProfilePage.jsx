@@ -11,6 +11,15 @@ export default function ProfilePage() {
     email: user?.email || "",
     bio: user?.bio || "",
   });
+
+  // Keep formData in sync with user when user changes (e.g., after update)
+  React.useEffect(() => {
+    setFormData({
+      name: user?.name || "",
+      email: user?.email || "",
+      bio: user?.bio || "",
+    });
+  }, [user]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,8 +34,13 @@ export default function ProfilePage() {
     setError("");
 
     try {
-      // In a real app, this would call an API to update the user profile
-      await updateUser(formData);
+      // Call updateUser and use the returned updated user to update local form state
+      const updated = await updateUser(formData);
+      setFormData({
+        name: updated.name || '',
+        email: updated.email || '',
+        bio: updated.bio || '',
+      });
       setIsEditing(false);
     } catch (err) {
       setError("Failed to update profile. Please try again.");

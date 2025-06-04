@@ -65,27 +65,25 @@ export default function SettingsPage() {
     setMessage({ text: "", type: "" });
 
     try {
-      // Update user preferences with notification settings
+      // Update user preferences with notification settings using updateUser
       if (user && user.id) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          try {
-            const userData = JSON.parse(storedUser);
-            userData.preferences = { 
-              ...userData.preferences,
-              notifications: notifications
-            };
-            localStorage.setItem("user", JSON.stringify(userData));
-
-            setMessage({ 
-              text: "Settings saved successfully!", 
-              type: "success" 
-            });
-          } catch (err) {
-            console.error("Failed to update notification preferences in local storage:", err);
-            throw new Error("Failed to save settings");
+        const updated = await updateUser({
+          preferences: {
+            ...user.preferences,
+            notifications: notifications
           }
-        }
+        });
+        // Sync notifications state with updated user
+        setNotifications({
+          email: updated.preferences?.notifications?.email ?? true,
+          app: updated.preferences?.notifications?.app ?? true,
+          studyReminders: updated.preferences?.notifications?.studyReminders ?? true,
+          newFeatures: updated.preferences?.notifications?.newFeatures ?? false,
+        });
+        setMessage({
+          text: "Settings saved successfully!",
+          type: "success"
+        });
       }
     } catch (error) {
       setMessage({ 
