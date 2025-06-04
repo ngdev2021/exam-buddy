@@ -18,6 +18,7 @@ export default function RegisterForm() {
   const password = watch('password', '');
   
   const onSubmit = async (data) => {
+  console.log('RegisterForm submission:', data);
     try {
       await registerUser(data.email, data.password);
       // Navigate to home after successful registration
